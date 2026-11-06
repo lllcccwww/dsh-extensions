@@ -52,6 +52,8 @@ icon.svg                   插件图标
 
 往宿主已有设置页（如 `settings.general.item`）插行时，行标题后要用 `extensionBadge(t)` 带上「扩展」小徽标，让用户分得清内置项和扩展项；行组件还要自带 `<style>`，因为宿主页面不会挂载本包的分区组件。
 
+配置项允许再分子项：`.dx-sub-list` 里每行 `.dx-sub-row`，左侧同样是「名称 + 描述」（`dx-sub-title` / `dx-sub-desc`），右侧放控件或只读取值（`dx-sub-value`）。通知页的「系统通知权限」「发送测试通知」就是子项；左侧的竖线表示层级，不再额外加卡片或缩进层级文案。
+
 配置项组件收到的 props 只有 `{ t }`（`t` 已绑定本包命名空间），不要 `require` 任何 Harness Client 包。
 
 ## 迁移与回退

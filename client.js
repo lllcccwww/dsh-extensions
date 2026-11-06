@@ -43,8 +43,11 @@ window.__ModuleLoader__.load({
       'badge.hint': '这一行由 DSH扩展 提供',
       'notify.title': '回答完成通知',
       'notify.desc': '窗口最小化或在后台时，回答结束发系统通知。',
-      'notify.test': '发送测试',
-      'notify.permission': '系统权限',
+      'notify.permTitle': '系统通知权限',
+      'notify.permDesc': '被系统拒绝时不会弹出任何通知',
+      'notify.testTitle': '发送测试通知',
+      'notify.testDesc': '立即弹一条，检验系统通知能否正常出现',
+      'notify.testSend': '发送',
       'notify.permGranted': '已允许',
       'notify.permDenied': '已拒绝，需在系统设置里恢复',
       'notify.permDefault': '尚未授权',
@@ -78,8 +81,11 @@ window.__ModuleLoader__.load({
       'badge.hint': 'This row is provided by DSH extensions',
       'notify.title': 'Completion notifications',
       'notify.desc': 'Notifies you when an answer finishes while the window is minimized or in the background.',
-      'notify.test': 'Send test',
-      'notify.permission': 'System permission',
+      'notify.permTitle': 'System notification permission',
+      'notify.permDesc': 'Nothing appears when the system denies notifications',
+      'notify.testTitle': 'Send a test notification',
+      'notify.testDesc': 'Show one now to check that system notifications appear',
+      'notify.testSend': 'Send',
       'notify.permGranted': 'Allowed',
       'notify.permDenied': 'Denied; allow it again in system settings',
       'notify.permDefault': 'Not granted yet',
@@ -100,10 +106,14 @@ window.__ModuleLoader__.load({
 .dx-setting-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .dx-setting-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px}
 .dx-setting-text{display:flex;flex-direction:column;gap:4px;min-width:0;padding-right:32px}
-.dx-setting-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:-2px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
-.dx-link{font:inherit;font-size:12px;line-height:18px;padding:0;border:none;background:transparent;color:var(--dsw-alias-brand-primary);cursor:pointer}
-.dx-link:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
-.dx-link:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.dx-sub-list{display:flex;flex-direction:column;margin:2px 0 0 2px;padding-left:14px;border-left:1px solid var(--dsw-alias-border-l2)}
+.dx-sub-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0}
+.dx-sub-row + .dx-sub-row{border-top:.5px solid var(--dsw-alias-border-l2)}
+.dx-sub-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dx-sub-title{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}
+.dx-sub-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.dx-sub-value{flex:none;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;white-space:nowrap}
+.dx-sub-value-warn{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary))}
 .dx-editor-wrap{position:relative;display:flex;flex-direction:column}
 .dx-editor{width:100%;box-sizing:border-box;min-height:300px;resize:vertical;padding:12px 12px 32px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-base,transparent);color:var(--dsw-alias-label-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:20px;outline:none;tab-size:2}
 .dx-editor:focus{border-color:var(--dsw-alias-brand-primary)}
@@ -115,6 +125,7 @@ window.__ModuleLoader__.load({
 .dx-btn:disabled{cursor:default;opacity:.45}
 .dx-btn-ghost{background:transparent;color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-border-l2)}
 .dx-btn-ghost:not(:disabled):hover{background:var(--dsw-alias-interactive-bg-hover)}
+.dx-btn-sm{padding:4px 10px;font-size:12px;line-height:16px}
 .dx-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dx-notice{padding:9px 12px;border-radius:var(--dsw-radius-md,10px);font-size:13px;line-height:20px}
 .dx-notice-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary));background:var(--dsw-alias-state-error-bg,var(--dsw-alias-bg-module-platform))}
@@ -567,11 +578,19 @@ window.__ModuleLoader__.load({
     //#endregion
 
     //#region notify panel
-    /** Live permission label for the panel. */
-    function permissionLabel(t) {
-      if (typeof Notification !== 'function') return t('notify.unsupported');
-      if (Notification.permission === 'granted') return t('notify.permGranted');
-      if (Notification.permission === 'denied') return t('notify.permDenied');
+    /** Raw system-notification permission, kept as a code so the label can follow the locale. */
+    function permissionCode() {
+      if (typeof Notification !== 'function') return 'unsupported';
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') return 'denied';
+      return 'default';
+    }
+
+    /** Localized label for one permission code. */
+    function permissionLabel(t, code) {
+      if (code === 'unsupported') return t('notify.unsupported');
+      if (code === 'granted') return t('notify.permGranted');
+      if (code === 'denied') return t('notify.permDenied');
       return t('notify.permDefault');
     }
 
@@ -583,15 +602,15 @@ window.__ModuleLoader__.load({
         notificationPreference.getSnapshot,
         notificationPreference.getSnapshot,
       );
-      const [permission, setPermission] = React.useState(() => permissionLabel(t));
+      const [permission, setPermission] = React.useState(permissionCode);
       React.useEffect(() => {
-        setPermission(permissionLabel(t));
-      }, [enabled, t]);
+        setPermission(permissionCode());
+      }, [enabled]);
 
       const toggle = () => {
         const next = !notificationPreference.getSnapshot();
         notificationPreference.set(next);
-        if (next) ensureNotificationPermission().then(() => setPermission(permissionLabel(t)), () => {});
+        if (next) ensureNotificationPermission().then(() => setPermission(permissionCode()), () => {});
       };
 
       const sendTest = () => {
@@ -600,7 +619,7 @@ window.__ModuleLoader__.load({
           body: t('notify.test.body'),
           sessionId: 'test',
           force: true,
-        }).then(() => setPermission(permissionLabel(t)), () => {});
+        }).then(() => setPermission(permissionCode()), () => {});
       };
 
       return h('div', { className: 'dx-setting' },
@@ -616,14 +635,25 @@ window.__ModuleLoader__.load({
             className: 'dx-switch',
             onClick: toggle,
           }, h('span', { className: 'dx-knob' }))),
-        h('div', { className: 'dx-setting-foot' },
-          h('span', null, `${t('notify.permission')} · ${permission}`),
-          h('button', {
-            type: 'button',
-            className: 'dx-link',
-            disabled: !enabled,
-            onClick: sendTest,
-          }, t('notify.test'))));
+        h('div', { className: 'dx-sub-list' },
+          h('div', { className: 'dx-sub-row' },
+            h('div', { className: 'dx-sub-text' },
+              h('div', { className: 'dx-sub-title' }, t('notify.permTitle')),
+              h('div', { className: 'dx-sub-desc' }, t('notify.permDesc'))),
+            h('span', {
+              className: `dx-sub-value${permission === 'denied' ? ' dx-sub-value-warn' : ''}`,
+              role: 'status',
+            }, permissionLabel(t, permission))),
+          h('div', { className: 'dx-sub-row' },
+            h('div', { className: 'dx-sub-text' },
+              h('div', { className: 'dx-sub-title' }, t('notify.testTitle')),
+              h('div', { className: 'dx-sub-desc' }, t('notify.testDesc'))),
+            h('button', {
+              type: 'button',
+              className: 'dx-btn dx-btn-ghost dx-btn-sm',
+              disabled: !enabled,
+              onClick: sendTest,
+            }, t('notify.testSend')))));
     }
 
     /** One General-settings row that keeps the quick notification switch. */
