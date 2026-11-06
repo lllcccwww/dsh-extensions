@@ -30,14 +30,12 @@ window.__ModuleLoader__.load({
       'ins.desc': '所有会话都会加载；与项目里的 AGENTS.md 一起注入，更具体的优先。',
       'ins.loading': '正在读取…',
       'ins.readFailed': '读取全局 AGENTS.md 失败',
-      'ins.missingTag': '尚未创建',
-      'ins.existsTag': '已创建',
       'ins.editorLabel': '全局 AGENTS.md 内容',
       'ins.placeholder': '# 我的偏好\n\n- 默认用简体中文回答\n- 代码、命令、路径保持英文原文\n- 提交信息说明改了什么、为什么改',
       'ins.saving': '保存中…',
       'ins.saved': '已自动保存 · 新会话生效',
       'ins.saveFailed': '保存失败',
-      'ins.budgetHint': '字节 · 单条链上限',
+      'ins.budgetHint': '字节',
 
       'settings.title': '回答完成通知',
       'settings.description': '应用窗口最小化或不在前台时，回答完成后发送桌面通知。',
@@ -67,14 +65,12 @@ window.__ModuleLoader__.load({
       'ins.desc': 'Loaded by every session together with each project AGENTS.md; the more specific one takes precedence.',
       'ins.loading': 'Reading…',
       'ins.readFailed': 'Could not read the global AGENTS.md',
-      'ins.missingTag': 'Not created yet',
-      'ins.existsTag': 'Created',
       'ins.editorLabel': 'Global AGENTS.md content',
       'ins.placeholder': '# My preferences\n\n- Answer in English\n- Keep code, commands, and paths verbatim\n- Commit messages explain what changed and why',
       'ins.saving': 'Saving…',
       'ins.saved': 'Saved · applies to new sessions',
       'ins.saveFailed': 'Could not save',
-      'ins.budgetHint': 'bytes · per-chain limit',
+      'ins.budgetHint': 'bytes',
 
       'settings.title': 'Completion notifications',
       'settings.description': 'Send a desktop notification when an answer finishes while the window is minimized or in the background.',
@@ -108,16 +104,11 @@ window.__ModuleLoader__.load({
 .dx-link{font:inherit;font-size:12px;line-height:18px;padding:0;border:none;background:transparent;color:var(--dsw-alias-brand-primary);cursor:pointer}
 .dx-link:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
 .dx-link:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
-.dx-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:20px}
-.dx-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:18px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base,transparent);border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:1px 6px}
-.dx-tag{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
-.dx-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:var(--dsw-alias-label-tertiary);vertical-align:1px}
-.dx-dot-on{background:var(--dsw-alias-brand-primary)}
-.dx-editor{width:100%;box-sizing:border-box;min-height:300px;resize:vertical;padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-base,transparent);color:var(--dsw-alias-label-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:20px;outline:none;tab-size:2}
+.dx-editor-wrap{position:relative;display:flex;flex-direction:column}
+.dx-editor{width:100%;box-sizing:border-box;min-height:300px;resize:vertical;padding:12px 12px 32px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-base,transparent);color:var(--dsw-alias-label-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:20px;outline:none;tab-size:2}
 .dx-editor:focus{border-color:var(--dsw-alias-brand-primary)}
 .dx-editor::placeholder{color:var(--dsw-alias-label-tertiary)}
-.dx-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.dx-count{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.dx-editor-meta{position:absolute;left:12px;right:18px;bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
 .dx-count-over{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-label-primary))}
 .dx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dx-btn{font:inherit;font-size:13px;line-height:18px;padding:6px 12px;border-radius:var(--dsw-radius-md,10px);border:1px solid transparent;cursor:pointer;white-space:nowrap}
@@ -128,7 +119,7 @@ window.__ModuleLoader__.load({
 .dx-notice{padding:9px 12px;border-radius:var(--dsw-radius-md,10px);font-size:13px;line-height:20px}
 .dx-notice-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary));background:var(--dsw-alias-state-error-bg,var(--dsw-alias-bg-module-platform))}
 .dx-notice-ok{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-module-platform)}
-.dx-save-status{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
+.dx-save-status{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
 .dx-save-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary))}
 .dx-warn{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;margin:0}
 .dx-switch{position:relative;flex:none;width:40px;height:22px;padding:0;border:none;border-radius:999px;background:var(--dsw-alias-bg-module-platform);cursor:pointer;transition:background .15s ease}
@@ -538,25 +529,6 @@ window.__ModuleLoader__.load({
       const budget = typeof state?.maxBytes === 'number' ? state.maxBytes : 65536;
       const overBudget = bytes > budget;
 
-      const meta = h('div', { className: 'dx-meta' },
-        h('code', { className: 'dx-path' }, state?.displayPath ?? '~/.dsh/AGENTS.md'),
-        h('span', { className: 'dx-tag' },
-          h('span', { className: `dx-dot${state?.exists ? ' dx-dot-on' : ''}` }),
-          state?.exists ? t('ins.existsTag') : t('ins.missingTag')));
-
-      const editor = h('textarea', {
-        className: 'dx-editor',
-        spellCheck: false,
-        'aria-label': t('ins.editorLabel'),
-        placeholder: t('ins.placeholder'),
-        value: draft,
-        onChange: (event) => {
-          draftRef.current = event.target.value;
-          setDraft(event.target.value);
-        },
-        onKeyDown,
-      });
-
       const statusText = status === 'saving'
         ? t('ins.saving')
         : status === 'saved'
@@ -565,21 +537,32 @@ window.__ModuleLoader__.load({
             ? (saveError === '' ? t('ins.saveFailed') : saveError)
             : '';
 
-      const footer = h('div', { className: 'dx-foot' },
-        h('span', { className: `dx-count${overBudget ? ' dx-count-over' : ''}` },
-          `${bytes.toLocaleString()} / ${budget.toLocaleString()} ${t('ins.budgetHint')}`),
-        statusText === ''
-          ? null
-          : h('span', {
+      // The counter and the save state sit inside the input, so the field is the
+      // only chrome this setting shows.
+      const editor = h('div', { className: 'dx-editor-wrap' },
+        h('textarea', {
+          className: 'dx-editor',
+          spellCheck: false,
+          'aria-label': t('ins.editorLabel'),
+          placeholder: t('ins.placeholder'),
+          value: draft,
+          onChange: (event) => {
+            draftRef.current = event.target.value;
+            setDraft(event.target.value);
+          },
+          onKeyDown,
+        }),
+        h('div', { className: 'dx-editor-meta', 'aria-hidden': statusText === '' ? 'true' : undefined },
+          h('span', {
             className: `dx-save-status${status === 'error' ? ' dx-save-error' : ''}`,
             role: status === 'error' ? 'alert' : 'status',
-          }, statusText));
+          }, statusText),
+          h('span', { className: `dx-count${overBudget ? ' dx-count-over' : ''}` },
+            `${bytes.toLocaleString()} / ${budget.toLocaleString()} ${t('ins.budgetHint')}`)));
 
       return h('div', { className: 'dx-setting' },
         settingHead(t, 'ins.title', 'ins.desc'),
-        meta,
-        editor,
-        footer);
+        editor);
     }
     //#endregion
 
@@ -853,5 +836,6 @@ window.__ModuleLoader__.load({
     };
   },
 });
+
 
 
