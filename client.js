@@ -106,9 +106,8 @@ window.__ModuleLoader__.load({
 .dx-setting-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .dx-setting-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px}
 .dx-setting-text{display:flex;flex-direction:column;gap:4px;min-width:0;padding-right:32px}
-.dx-sub-list{display:flex;flex-direction:column;margin-top:4px}
-.dx-sub-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 0}
-.dx-sub-row + .dx-sub-row{border-top:.5px solid var(--dsw-alias-border-l2)}
+.dx-sub-list{display:flex;flex-direction:column;margin-top:2px;padding-left:12px}
+.dx-sub-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0}
 .dx-sub-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .dx-sub-title{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}
 .dx-sub-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
