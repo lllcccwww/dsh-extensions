@@ -1,6 +1,7 @@
 /**
  * Client half of the DSH extensions bundle: one Settings section that hosts a
- * tab per feature, plus the General-settings row the notify feature keeps.
+ * row per feature. Every entry lives in that section; nothing is injected into
+ * host Settings pages.
  *
  * The browser artifact registers a lazy factory whose id equals the package
  * name. Only React comes from the module table; every control is local so a
@@ -37,10 +38,6 @@ window.__ModuleLoader__.load({
       'ins.saveFailed': '保存失败',
       'ins.budgetHint': '字节',
 
-      'settings.title': '回答完成通知',
-      'settings.description': '应用窗口最小化或不在前台时，回答完成后发送桌面通知。',
-      'badge.label': '扩展',
-      'badge.hint': '这一行由 DSH扩展 提供',
       'notify.title': '回答完成通知',
       'notify.desc': '窗口最小化或在后台时，回答结束发系统通知。',
       'notify.toggleTitle': '启用通知',
@@ -75,10 +72,6 @@ window.__ModuleLoader__.load({
       'ins.saveFailed': 'Could not save',
       'ins.budgetHint': 'bytes',
 
-      'settings.title': 'Completion notifications',
-      'settings.description': 'Send a desktop notification when an answer finishes while the window is minimized or in the background.',
-      'badge.label': 'Extension',
-      'badge.hint': 'This row is provided by DSH extensions',
       'notify.title': 'Completion notifications',
       'notify.desc': 'Notifies you when an answer finishes while the window is minimized or in the background.',
       'notify.toggleTitle': 'Enable notifications',
@@ -118,7 +111,6 @@ window.__ModuleLoader__.load({
 .dx-editor::placeholder{color:var(--dsw-alias-label-tertiary)}
 .dx-editor-meta{position:absolute;left:12px;right:18px;bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
 .dx-count-over{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-label-primary))}
-.dx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dx-btn{font:inherit;font-size:13px;line-height:18px;padding:6px 12px;border-radius:var(--dsw-radius-md,10px);border:1px solid transparent;cursor:pointer;white-space:nowrap}
 .dx-btn:disabled{cursor:default;opacity:.45}
 .dx-btn-ghost{background:transparent;color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-border-l2)}
@@ -140,12 +132,6 @@ window.__ModuleLoader__.load({
 .dx-error{padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px)}
 .dx-error-title{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}
 .dx-error-hint{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;margin-top:4px}
-.dx-row{display:flex;align-items:center;gap:8px;padding:16px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
-.dx-row-text{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0;padding-right:48px}
-.dx-row-title{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}
-.dx-row-title-line{display:flex;align-items:center;gap:6px;min-width:0}
-.dx-badge{display:inline-flex;align-items:center;flex:none;height:18px;padding:0 6px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px;font-weight:400;white-space:nowrap}
-.dx-row-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 `;
 
     //#region helpers
@@ -650,49 +636,6 @@ window.__ModuleLoader__.load({
             }, t('notify.testSend')))));
     }
 
-    /** One General-settings row that keeps the quick notification switch. */
-    /**
-     * Quiet chip marking a Settings row this bundle contributed, so it reads as
-     * third-party beside built-in rows without shouting.
-     */
-    function extensionBadge(t) {
-      return h('span', {
-        className: 'dx-badge',
-        title: t('badge.hint'),
-      }, t('badge.label'));
-    }
-
-    /** One General-settings row: the quick switch for completion notifications. */
-    function NotifyRow(props) {
-      const t = translator(props);
-      const enabled = React.useSyncExternalStore(
-        notificationPreference.subscribe,
-        notificationPreference.getSnapshot,
-        notificationPreference.getSnapshot,
-      );
-      const toggle = () => {
-        const next = !notificationPreference.getSnapshot();
-        notificationPreference.set(next);
-        if (next) void ensureNotificationPermission();
-      };
-      return h(React.Fragment, null,
-        h('style', { key: 'style' }, CSS),
-        h('div', { className: 'dx-row' },
-          h('div', { className: 'dx-row-text' },
-            h('div', { className: 'dx-row-title-line' },
-              h('span', { className: 'dx-row-title' }, t('settings.title')),
-              extensionBadge(t)),
-            h('div', { className: 'dx-row-desc' }, t('settings.description'))),
-          h('div', { className: 'dx-actions' },
-            h('button', {
-              type: 'button',
-              role: 'switch',
-              'aria-checked': enabled ? 'true' : 'false',
-              'aria-label': t('settings.title'),
-              className: 'dx-switch',
-              onClick: toggle,
-            }, h('span', { className: 'dx-knob' })))));
-    }
     //#endregion
 
     //#region hub shell
@@ -755,13 +698,6 @@ window.__ModuleLoader__.load({
           label: () => ctx.locale.bind(NS)('nav'),
           locale: NS,
         }, DhExtensionsSection));
-
-        ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-          name: 'settings.general.item',
-          id: 'dh-notify',
-          order: 21,
-          locale: NS,
-        }, NotifyRow));
 
         const list = ctx.sessions?.list;
         const listSnapshot = () => {

@@ -4,11 +4,11 @@
 
 ## 这是什么
 
-DSH（DeepSeek Harness）的一个本地 bundle：向设置面板注册「DSH扩展」分区，承载若干 feature；同时向「通用设置」插入通知快捷开关。仓库根目录就是插件包（`package.json` 在此），通过 `link:` 装进 `~/.dsh/profiles/<profile>`。
+DSH（DeepSeek Harness）的一个本地 bundle：向设置面板注册「DSH扩展」分区，承载若干 feature。所有扩展入口和配置都只放在这个分区里，不往宿主设置页插入行或开关。仓库根目录就是插件包（`package.json` 在此），通过 `link:` 装进 `~/.dsh/profiles/<profile>`。
 
 ## 平台约束（决定了架构，不要重试）
 
-- 插件不能声明新的 slot。对外只有 `inject` / `register` / `entries` / `subscribe` / `getVersion`；`settings.section`、`settings.general.item` 这些 owner key 由内置包在编译期定义。因此做不了「外壳包 + 独立子插件包」，只能**一个包内多个 feature**。
+- 插件不能声明新的 slot。对外只有 `inject` / `register` / `entries` / `subscribe` / `getVersion`；`settings.section` 由内置包在编译期定义，本包只注册这一个分区。因此做不了「外壳包 + 独立子插件包」，只能**一个包内多个 feature**。
 - 账号菜单（设置 / 意见反馈 / 退出登录）无法插入自定义项：它由 `ui-settings-account` 的 `AccountMenu` 整体渲染，`settings.launcher` 是 `kind: "single"` 且组件内部无子槽；`openSection(id)` 只传给 `settings.onboarding` 与设置外壳内部。要改只能整套替换账号菜单，代价不可接受。
 - Client 模块加载器不支持相对导入，`client.js` 必须是单文件；React 从模块表取。不要 `require` 任何 `@deepseek-ai` Client 包，控件自己写。
 - 一个版本、一次安装、一个失败域：client 每项套 `PanelBoundary`，host 每个 feature 的 `setup` 单独 try/catch。
@@ -17,7 +17,7 @@ DSH（DeepSeek Harness）的一个本地 bundle：向设置面板注册「DSH扩
 
 ```
 index.js                   host 聚合层：遍历 features 注册路由、执行 setup
-client.js                  client 聚合层（单文件）：字典、行组件、两个配置项、通用设置行
+client.js                  client 聚合层（单文件）：字典、行组件、各 feature 的配置项
 features/registry.js       feature 清单与激活顺序
 features/instructions/     host：/dh/instructions/state | /save
 features/notify/           host：/dh/notify/focus + assets（focus-window.ps1、FocusNative.cs）
@@ -48,7 +48,7 @@ locale/{zh,en}.json        插件列表里的标题与描述
 - **不套外壳**：除输入控件自身的边框，不再包一层卡片、底色或圆角容器。
 - **文案克制**：不写分区介绍、长段落、可折叠说明；状态信息写进描述或作为右侧取值，一行说完。
 - **浮层要留白**：计数、保存状态等浮层放进输入框内部时，给输入框补对应方向的内边距，浮层设 `pointer-events: none`。
-- **插到宿主设置页**（如 `settings.general.item`）：组件必须自带 `<style>`（宿主页面不会挂载本分区），标题后加 `extensionBadge(t)`；行内只放一个开关类控件，其它动作留在本分区。
+- **配置只进本分区**：所有入口和配置只加在「DSH扩展」分区里，不要往宿主设置页（如 `settings.general.item`）插入行、开关或徽标；宿主页面有自己的排布和文案，插进去既重复又难保持一致。
 - **只用主题 token**：颜色、边框、圆角用 `--dsw-alias-*`，字面颜色只用于图标。
 
 ## 实现规则
