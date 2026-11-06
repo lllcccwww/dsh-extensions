@@ -1,4 +1,4 @@
-# DH扩展包（dsh-extensions）
+# DSH扩展（dsh-extensions）
 
 一个设置入口，收着若干小功能。目前两页：
 
@@ -73,3 +73,4 @@ node test/host.test.mjs
 - 编辑页的 65,536 字节是 `dsh-base` 给 `dsh-agent-instructions` 的默认 `maxBytes` 提示值；profile 改过预算时以加载器配置为准。
 - 文件超过 1 MiB 时只读前 1 MiB 并禁止在本编辑器保存。
 - 本项目是 `link:` 安装：改 `client.js` 需重启应用才会加载新的 JS 模块；只改页面文案也要重启。
+

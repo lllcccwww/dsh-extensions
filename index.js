@@ -1,5 +1,5 @@
 /**
- * Host aggregate for the DH extensions bundle.
+ * Host aggregate for the DSH extensions bundle.
  *
  * Each feature owns its routes and optional setup; this file only mounts them,
  * so a failing feature is reported without preventing the others from loading.
@@ -29,3 +29,4 @@ export function apply(ctx) {
     }
   }
 }
+

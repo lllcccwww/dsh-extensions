@@ -1,5 +1,5 @@
 /**
- * Client half of the DH extensions bundle: one Settings section that hosts a
+ * Client half of the DSH extensions bundle: one Settings section that hosts a
  * tab per feature, plus the General-settings row the notify feature keeps.
  *
  * The browser artifact registers a lazy factory whose id equals the package
@@ -24,7 +24,7 @@ window.__ModuleLoader__.load({
     const NOTICE_TTL_MS = 3200;
 
     const zh = {
-      nav: 'DH扩展包',
+      nav: 'DSH扩展',
       intro: '一个入口收着几个小功能，各自独立开关。后面新增的功能也会出现在这里。',
       'tabs.label': '功能',
       'crash.title': '这一页没能渲染',
@@ -88,7 +88,7 @@ window.__ModuleLoader__.load({
     };
 
     const en = {
-      nav: 'DH extensions',
+      nav: 'DSH extensions',
       intro: 'One entry collects a few small features, each with its own switch. Features added later show up here too.',
       'tabs.label': 'Features',
       'crash.title': 'This panel failed to render',
@@ -791,6 +791,7 @@ window.__ModuleLoader__.load({
         });
       };
       return h(React.Fragment, null,
+        h('style', { key: 'style' }, CSS),
         h('div', { className: 'dx-row' },
           h('div', { className: 'dx-row-text' },
             h('div', { className: 'dx-row-title' }, t('settings.title')),
@@ -860,7 +861,7 @@ window.__ModuleLoader__.load({
       return FEATURES[0].id;
     }
 
-    /** The DH extensions settings section. */
+    /** The DSH extensions settings section. */
     function DhExtensionsSection(props) {
       const t = translator(props);
       const [tab, setTab] = React.useState(initialTab);
@@ -1036,3 +1037,4 @@ window.__ModuleLoader__.load({
     };
   },
 });
+

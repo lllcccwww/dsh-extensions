@@ -1,5 +1,5 @@
 /**
- * Host aggregate checks for the DH extensions bundle: every feature mounts its
+ * Host aggregate checks for the DSH extensions bundle: every feature mounts its
  * routes, the instructions feature keeps its state/save contract, and the
  * notify focus route answers without spawning the window helper.
  */
@@ -124,3 +124,4 @@ assert.equal((await call('/dh/notify/focus', 'DELETE')).status, 405);
 
 rmSync(home, { recursive: true, force: true });
 console.log('host aggregate checks passed');
+

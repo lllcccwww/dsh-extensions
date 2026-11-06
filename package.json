@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "DH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, and future features",
+  "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, and future features",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lllcccwww/dsh-extensions.git"
@@ -42,3 +42,4 @@
     }
   }
 }
+
