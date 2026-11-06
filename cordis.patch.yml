@@ -1,0 +1,3 @@
+- insert:
+    - id: dh-extensions
+      name: '@local/dh-extensions'
