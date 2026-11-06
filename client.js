@@ -108,7 +108,6 @@ window.__ModuleLoader__.load({
 .dx-link{font:inherit;font-size:12px;line-height:18px;padding:0;border:none;background:transparent;color:var(--dsw-alias-brand-primary);cursor:pointer}
 .dx-link:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
 .dx-link:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
-.dx-card{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-module-platform)}
 .dx-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:20px}
 .dx-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:18px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base,transparent);border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:1px 6px}
 .dx-tag{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
@@ -578,7 +577,9 @@ window.__ModuleLoader__.load({
 
       return h('div', { className: 'dx-setting' },
         settingHead(t, 'ins.title', 'ins.desc'),
-        h('div', { className: 'dx-card' }, meta, editor, footer));
+        meta,
+        editor,
+        footer);
     }
     //#endregion
 
