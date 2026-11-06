@@ -14,7 +14,7 @@ github:lllcccwww/dsh-extensions
 
 | 配置项 | 做什么 |
 |---|---|
-| 全局 AGENTS.md | 直接编辑 `$DSH_HOME/AGENTS.md`（默认 `~/.dsh/AGENTS.md`），也就是每个会话都会加载的用户全局指令 |
+| 全局 AGENTS.md | 直接编辑 `$DSH_HOME/AGENTS.md`（默认 `~/.dsh/AGENTS.md`）；只有输入框，停顿 0.7 秒自动保存，另有一行状态提示 |
 | 回答完成通知 | 窗口最小化或不在前台时，回答结束发系统通知；点击恢复窗口并打开会话 |
 
 「通用设置」里仍保留「回答完成通知」的快捷开关（与包内同一状态双向同步）。
@@ -72,7 +72,8 @@ node test/host.test.mjs
 
 - 通知由页面内的 `Notification` API 发出，应用退出后不会通知。
 - 编辑页的 65,536 字节是 `dsh-base` 给 `dsh-agent-instructions` 的默认 `maxBytes` 提示值；profile 改过预算时以加载器配置为准。
-- 文件超过 1 MiB 时只读前 1 MiB 并禁止在本编辑器保存。
+- 文件超过 1 MiB 时只读前 1 MiB，任何保存都会失败并在状态行报错。
+- 自动保存与外部编辑冲突时，以编辑器中的文字为准（自动带 `force` 重试一次）；关闭设置面板时会对未保存的草稿补发一次 `keepalive` 请求。
 - 本项目是 `link:` 安装：改 `client.js` 需重启应用才会加载新的 JS 模块；只改页面文案也要重启。
 
 

@@ -27,36 +27,17 @@ window.__ModuleLoader__.load({
       'crash.hint': '其它配置项不受影响；刷新页面可以重试。',
 
       'ins.title': '全局 AGENTS.md',
-      'ins.desc': '所有会话都会加载；项目里的 AGENTS.md 更具体，优先。',
+      'ins.desc': '所有会话都会加载；与项目里的 AGENTS.md 一起注入，更具体的优先。',
       'ins.loading': '正在读取…',
-      'ins.retry': '重试',
       'ins.readFailed': '读取全局 AGENTS.md 失败',
       'ins.missingTag': '尚未创建',
       'ins.existsTag': '已创建',
-      'ins.modified': '{time} 修改',
       'ins.editorLabel': '全局 AGENTS.md 内容',
       'ins.placeholder': '# 我的偏好\n\n- 默认用简体中文回答\n- 代码、命令、路径保持英文原文\n- 提交信息说明改了什么、为什么改',
-      'ins.emptyHint': '这个文件还不存在。写入内容并保存后会创建它。',
-      'ins.template': '使用起始模板',
-      'ins.reload': '重新载入',
-      'ins.save': '保存',
       'ins.saving': '保存中…',
-      'ins.saved': '已保存，新会话开始时会加载新内容。',
+      'ins.saved': '已自动保存 · 新会话生效',
       'ins.saveFailed': '保存失败',
-      'ins.discardConfirm': '放弃未保存的修改？',
-      'ins.conflictTitle': '磁盘上的文件已被修改',
-      'ins.conflictBody': '载入之后这个文件在磁盘上发生了变化。选择覆盖磁盘内容，或者载入磁盘上的版本。',
-      'ins.overwrite': '覆盖保存',
-      'ins.loadDisk': '载入磁盘版本',
-      'ins.truncated': '文件超过加载上限（1 MiB），已截断显示；请先在外部编辑器中缩短它。',
-      'ins.budgetOver': '超过单条链的 65,536 字节预算，多出的部分会被截断。',
       'ins.budgetHint': '字节 · 单条链上限',
-      'ins.sharedNote': '另外还存在 {path}，它也会作为全局指令加载。',
-      'ins.unsaved': '有未保存的修改',
-      'ins.explainSummary': '全局文件与项目 AGENTS.md 如何组合',
-      'ins.explainMerge': '两者都会注入，先全局后项目，按从宽泛到具体排序；内容会拼接在一起，更具体的文件在措辞上优先。',
-      'ins.explainDedupe': '去重只发生在同一目录内：同目录的 AGENTS.md 与 CLAUDE.md 内容完全相同才只出现一次，项目文件即使与全局文件一字不差也会各自注入。',
-      'ins.explainTiming': '注入发生在会话第一次请求；改完最稳妥的是新开一个会话，当前会话会在下一次文件操作后对账。',
 
       'settings.title': '回答完成通知',
       'settings.description': '应用窗口最小化或不在前台时，回答完成后发送桌面通知。',
@@ -83,36 +64,17 @@ window.__ModuleLoader__.load({
       'crash.hint': 'Other settings keep working; reload the page to retry.',
 
       'ins.title': 'Global AGENTS.md',
-      'ins.desc': 'Loaded by every session; a project AGENTS.md is more specific and takes precedence.',
+      'ins.desc': 'Loaded by every session together with each project AGENTS.md; the more specific one takes precedence.',
       'ins.loading': 'Reading…',
-      'ins.retry': 'Retry',
       'ins.readFailed': 'Could not read the global AGENTS.md',
       'ins.missingTag': 'Not created yet',
       'ins.existsTag': 'Created',
-      'ins.modified': 'modified {time}',
       'ins.editorLabel': 'Global AGENTS.md content',
       'ins.placeholder': '# My preferences\n\n- Answer in English\n- Keep code, commands, and paths verbatim\n- Commit messages explain what changed and why',
-      'ins.emptyHint': 'This file does not exist yet. Saving content creates it.',
-      'ins.template': 'Use starter template',
-      'ins.reload': 'Reload',
-      'ins.save': 'Save',
       'ins.saving': 'Saving…',
-      'ins.saved': 'Saved. New sessions pick up the new content.',
+      'ins.saved': 'Saved · applies to new sessions',
       'ins.saveFailed': 'Could not save',
-      'ins.discardConfirm': 'Discard unsaved changes?',
-      'ins.conflictTitle': 'The file changed on disk',
-      'ins.conflictBody': 'This file changed on disk after it was loaded. Overwrite the disk copy, or load the version on disk.',
-      'ins.overwrite': 'Overwrite',
-      'ins.loadDisk': 'Load disk version',
-      'ins.truncated': 'The file exceeds the 1 MiB loader limit and is shown truncated; shorten it in an external editor first.',
-      'ins.budgetOver': 'This exceeds the 65,536-byte per-chain budget, so the excess is truncated.',
       'ins.budgetHint': 'bytes · per-chain limit',
-      'ins.sharedNote': '{path} also exists and loads as global instructions.',
-      'ins.unsaved': 'Unsaved changes',
-      'ins.explainSummary': 'How the global and project AGENTS.md combine',
-      'ins.explainMerge': 'Both are injected: global first, then project files ordered broad to specific. The text is concatenated, and the more specific file takes precedence in wording.',
-      'ins.explainDedupe': 'Deduplication only happens within one directory: AGENTS.md and CLAUDE.md collapse only when their content matches, while a project file is injected even when it is identical to the global one.',
-      'ins.explainTiming': 'Injection happens on the first request of a session; a new session is the reliable way to pick up an edit, and the current one reconciles after the next file operation.',
 
       'settings.title': 'Completion notifications',
       'settings.description': 'Send a desktop notification when an answer finishes while the window is minimized or in the background.',
@@ -161,23 +123,15 @@ window.__ModuleLoader__.load({
 .dx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dx-btn{font:inherit;font-size:13px;line-height:18px;padding:6px 12px;border-radius:var(--dsw-radius-md,10px);border:1px solid transparent;cursor:pointer;white-space:nowrap}
 .dx-btn:disabled{cursor:default;opacity:.45}
-.dx-btn-primary{background:var(--dsw-alias-brand-primary);color:#fff}
-.dx-btn-primary:not(:disabled):hover{opacity:.9}
 .dx-btn-ghost{background:transparent;color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-border-l2)}
 .dx-btn-ghost:not(:disabled):hover{background:var(--dsw-alias-interactive-bg-hover)}
 .dx-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dx-notice{padding:9px 12px;border-radius:var(--dsw-radius-md,10px);font-size:13px;line-height:20px}
 .dx-notice-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary));background:var(--dsw-alias-state-error-bg,var(--dsw-alias-bg-module-platform))}
 .dx-notice-ok{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-module-platform)}
+.dx-save-status{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
+.dx-save-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary))}
 .dx-warn{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;margin:0}
-.dx-empty{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.dx-empty-text{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px}
-.dx-conflict{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px)}
-.dx-conflict-title{font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary)}
-.dx-conflict-body{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
-.dx-explain{margin-top:2px;color:var(--dsw-alias-label-tertiary);font-size:12.5px;line-height:19px}
-.dx-explain summary{cursor:pointer;font-size:12.5px;line-height:19px}
-.dx-explain ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .dx-switch{position:relative;flex:none;width:40px;height:22px;padding:0;border:none;border-radius:999px;background:var(--dsw-alias-bg-module-platform);cursor:pointer;transition:background .15s ease}
 .dx-switch:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .dx-switch[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
@@ -200,21 +154,6 @@ window.__ModuleLoader__.load({
     function utf8Length(text) {
       if (typeof TextEncoder === 'function') return new TextEncoder().encode(text).length;
       return unescape(encodeURIComponent(text)).length;
-    }
-
-    /** Human-readable byte size. */
-    function formatBytes(count) {
-      if (count < 1024) return `${count} B`;
-      const kb = count / 1024;
-      return kb < 10 ? `${kb.toFixed(1)} KB` : `${Math.round(kb)} KB`;
-    }
-
-    /** Local wall-clock label for a server ISO timestamp. */
-    function formatTime(iso) {
-      if (typeof iso !== 'string') return '';
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return '';
-      return date.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'numeric', day: 'numeric' });
     }
 
     /** Translator with a Chinese fallback when the slot does not pass one. */
@@ -445,24 +384,10 @@ window.__ModuleLoader__.load({
     //#endregion
 
     //#region instructions panel
-    /** The starter document offered when the global file does not exist yet. */
-    const STARTER = [
-      '# 我的偏好',
-      '',
-      '## 语言与表达',
-      '- 默认用简体中文回答；代码、命令、路径、标识符保持原文。',
-      '- 先给结论或改动结果，再给必要的解释；不重复显而易见的步骤。',
-      '',
-      '## 代码习惯',
-      '- 改动前先读相关实现，沿用仓库已有的模式与命名。',
-      '- 不做与任务无关的重构；新增依赖前先确认现有依赖是否够用。',
-      '',
-      '## 协作',
-      '- 改动完成后说明验证方式；没验证的部分明确说出来。',
-      '',
-    ].join('\n');
+    /** Debounce before an edit is written, so typing does not spam the Host. */
+    const AUTOSAVE_DELAY_MS = 700;
 
-    /** Global AGENTS.md editor. */
+    /** Global AGENTS.md editor: the textarea is the whole control and saves as you type. */
     function InstructionsPanel(props) {
       const t = translator(props);
       const mounted = React.useRef(true);
@@ -470,15 +395,15 @@ window.__ModuleLoader__.load({
       const [error, setError] = React.useState('');
       const [state, setState] = React.useState(null);
       const [draft, setDraft] = React.useState('');
-      const [saving, setSaving] = React.useState(false);
-      const [notice, setNotice] = React.useState(null);
-      const [conflict, setConflict] = React.useState(null);
-
-      React.useEffect(() => () => {
-        mounted.current = false;
-      }, []);
+      const [status, setStatus] = React.useState('idle');
+      const [saveError, setSaveError] = React.useState('');
+      const stateRef = React.useRef(null);
+      const draftRef = React.useRef('');
+      const saving = React.useRef(false);
 
       const applyState = React.useCallback((next) => {
+        stateRef.current = next;
+        draftRef.current = next.content ?? '';
         setState(next);
         setDraft(next.content ?? '');
         setPhase('ready');
@@ -488,7 +413,6 @@ window.__ModuleLoader__.load({
       const load = React.useCallback(() => {
         setPhase('loading');
         setError('');
-        setConflict(null);
         requestJson(STATE_URL).then(
           (next) => {
             if (mounted.current) applyState(next);
@@ -505,65 +429,96 @@ window.__ModuleLoader__.load({
         load();
       }, [load]);
 
+      // A failed load retries itself; the panel exposes no button to press.
       React.useEffect(() => {
-        if (notice === null) return undefined;
-        const timer = setTimeout(() => setNotice(null), NOTICE_TTL_MS);
+        if (phase !== 'error') return undefined;
+        const timer = setTimeout(load, 3000);
         return () => clearTimeout(timer);
-      }, [notice]);
+      }, [phase, load]);
 
-      const based = state?.content ?? '';
-      const dirty = phase === 'ready' && draft !== based;
-      const bytes = utf8Length(draft);
-      const budget = typeof state?.maxBytes === 'number' ? state.maxBytes : 65536;
-      const overBudget = phase === 'ready' && bytes > budget;
-
-      const save = async (force) => {
-        if (saving || phase !== 'ready') return;
-        setSaving(true);
-        setNotice(null);
+      const persist = React.useCallback(async () => {
+        const current = stateRef.current;
+        const content = draftRef.current;
+        if (content === (current?.content ?? '') || saving.current) return;
+        saving.current = true;
+        setStatus('saving');
+        setSaveError('');
+        const post = (force) => fetch(SAVE_URL, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ content, baseDigest: current?.digest, force }),
+        });
         try {
-          const response = await fetch(SAVE_URL, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              content: draft,
-              baseDigest: typeof state?.digest === 'string' ? state.digest : undefined,
-              force: force === true,
-            }),
-          });
-          const payload = await response.json().catch(() => ({}));
-          if (!mounted.current) return;
+          let response = await post(false);
+          let payload = await response.json().catch(() => ({}));
           if (response.status === 409) {
-            setConflict(payload.state ?? null);
-            return;
+            // Another writer touched the file: the text in this editor wins,
+            // which is what keeps auto-save free of conflict buttons.
+            response = await post(true);
+            payload = await response.json().catch(() => ({}));
           }
+          if (!mounted.current) return;
           if (!response.ok) {
-            setNotice({ kind: 'error', text: payload.error ?? t('ins.saveFailed') });
+            setStatus('error');
+            setSaveError(payload.error ?? t('ins.saveFailed'));
             return;
           }
-          applyState(payload);
-          setConflict(null);
-          setNotice({ kind: 'ok', text: t('ins.saved') });
+          // Keep typing that arrived during the request: only adopt the returned
+          // document when the draft still matches what was sent.
+          if (draftRef.current === content) {
+            applyState(payload);
+          } else {
+            stateRef.current = payload;
+            setState(payload);
+          }
+          setStatus('saved');
         } catch (reason) {
           if (mounted.current) {
-            setNotice({ kind: 'error', text: reason instanceof Error ? reason.message : String(reason) });
+            setStatus('error');
+            setSaveError(reason instanceof Error ? reason.message : String(reason));
           }
         } finally {
-          if (mounted.current) setSaving(false);
+          saving.current = false;
         }
-      };
+      }, [applyState, t]);
 
-      const reload = () => {
-        if (dirty && typeof window !== 'undefined' && typeof window.confirm === 'function') {
-          if (!window.confirm(t('ins.discardConfirm'))) return;
+      // Debounced auto-save: the effect re-arms while typing continues.
+      React.useEffect(() => {
+        if (phase !== 'ready') return undefined;
+        if (draft === (state?.content ?? '')) return undefined;
+        const timer = setTimeout(() => { void persist(); }, AUTOSAVE_DELAY_MS);
+        return () => clearTimeout(timer);
+      }, [draft, state, phase, persist]);
+
+      // "Saved" fades back to idle so the line stays quiet.
+      React.useEffect(() => {
+        if (status !== 'saved') return undefined;
+        const timer = setTimeout(() => setStatus('idle'), 1800);
+        return () => clearTimeout(timer);
+      }, [status]);
+
+      // Flush a pending draft when Settings closes so typing is never lost.
+      React.useEffect(() => () => {
+        mounted.current = false;
+        const current = stateRef.current;
+        const content = draftRef.current;
+        if (content === (current?.content ?? '')) return;
+        try {
+          void fetch(SAVE_URL, {
+            method: 'POST',
+            keepalive: true,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ content, baseDigest: current?.digest, force: true }),
+          });
+        } catch {
+          // A closing page may cancel the request; the file keeps the older text.
         }
-        load();
-      };
+      }, []);
 
       const onKeyDown = (event) => {
         if ((event.metaKey || event.ctrlKey) && (event.key === 's' || event.key === 'S')) {
           event.preventDefault();
-          void save(false);
+          void persist();
         }
       };
 
@@ -577,21 +532,18 @@ window.__ModuleLoader__.load({
         return h('div', { className: 'dx-setting' },
           settingHead(t, 'ins.title', 'ins.desc'),
           h('div', { className: 'dx-notice dx-notice-error', role: 'alert' },
-            `${t('ins.readFailed')}: ${error}`),
-          h('div', { className: 'dx-actions' },
-            h('button', { type: 'button', className: 'dx-btn dx-btn-ghost', onClick: load }, t('ins.retry'))));
+            `${t('ins.readFailed')}: ${error}`));
       }
+
+      const bytes = utf8Length(draft);
+      const budget = typeof state?.maxBytes === 'number' ? state.maxBytes : 65536;
+      const overBudget = bytes > budget;
 
       const meta = h('div', { className: 'dx-meta' },
         h('code', { className: 'dx-path' }, state?.displayPath ?? '~/.dsh/AGENTS.md'),
         h('span', { className: 'dx-tag' },
           h('span', { className: `dx-dot${state?.exists ? ' dx-dot-on' : ''}` }),
-          state?.exists ? t('ins.existsTag') : t('ins.missingTag')),
-        state?.exists && typeof state.updatedAt === 'string'
-          ? h('span', { className: 'dx-tag' },
-            `${formatBytes(state.bytes)} · ${t('ins.modified', { time: formatTime(state.updatedAt) })}`)
-          : null,
-        dirty ? h('span', { className: 'dx-tag' }, `· ${t('ins.unsaved')}`) : null);
+          state?.exists ? t('ins.existsTag') : t('ins.missingTag')));
 
       const editor = h('textarea', {
         className: 'dx-editor',
@@ -599,85 +551,34 @@ window.__ModuleLoader__.load({
         'aria-label': t('ins.editorLabel'),
         placeholder: t('ins.placeholder'),
         value: draft,
-        onChange: (event) => setDraft(event.target.value),
+        onChange: (event) => {
+          draftRef.current = event.target.value;
+          setDraft(event.target.value);
+        },
         onKeyDown,
       });
+
+      const statusText = status === 'saving'
+        ? t('ins.saving')
+        : status === 'saved'
+          ? t('ins.saved')
+          : status === 'error'
+            ? (saveError === '' ? t('ins.saveFailed') : saveError)
+            : '';
 
       const footer = h('div', { className: 'dx-foot' },
         h('span', { className: `dx-count${overBudget ? ' dx-count-over' : ''}` },
           `${bytes.toLocaleString()} / ${budget.toLocaleString()} ${t('ins.budgetHint')}`),
-        h('div', { className: 'dx-actions' },
-          h('button', {
-            type: 'button',
-            className: 'dx-btn dx-btn-ghost',
-            onClick: reload,
-            disabled: saving,
-          }, t('ins.reload')),
-          h('button', {
-            type: 'button',
-            className: 'dx-btn dx-btn-primary',
-            onClick: () => void save(false),
-            disabled: saving || !dirty,
-          }, saving ? t('ins.saving') : t('ins.save'))));
-
-      const emptyRow = state?.exists
-        ? null
-        : h('div', { className: 'dx-empty' },
-          h('span', { className: 'dx-empty-text' }, t('ins.emptyHint')),
-          h('button', {
-            type: 'button',
-            className: 'dx-btn dx-btn-ghost',
-            onClick: () => setDraft(STARTER),
-          }, t('ins.template')));
-
-      const warnings = [];
-      if (state?.truncated) warnings.push(h('p', { className: 'dx-warn', key: 'truncated' }, t('ins.truncated')));
-      if (overBudget) warnings.push(h('p', { className: 'dx-warn', key: 'budget' }, t('ins.budgetOver')));
-      if (state?.sharedExists) {
-        warnings.push(h('p', { className: 'dx-warn', key: 'shared' },
-          t('ins.sharedNote', { path: state.sharedDisplayPath })));
-      }
-
-      const conflictRow = conflict === null ? null : h('div', { className: 'dx-conflict', role: 'alert' },
-        h('div', { className: 'dx-conflict-title' }, t('ins.conflictTitle')),
-        h('div', { className: 'dx-conflict-body' }, t('ins.conflictBody')),
-        h('div', { className: 'dx-actions' },
-          h('button', {
-            type: 'button',
-            className: 'dx-btn dx-btn-ghost',
-            onClick: () => {
-              applyState(conflict);
-              setConflict(null);
-            },
-          }, t('ins.loadDisk')),
-          h('button', {
-            type: 'button',
-            className: 'dx-btn dx-btn-primary',
-            onClick: () => {
-              setConflict(null);
-              void save(true);
-            },
-          }, t('ins.overwrite'))));
-
-      const noticeRow = notice === null ? null : h('div', {
-        className: `dx-notice dx-notice-${notice.kind === 'ok' ? 'ok' : 'error'}`,
-        role: notice.kind === 'ok' ? 'status' : 'alert',
-      }, notice.text);
-
-      const explainer = h('details', { className: 'dx-explain' },
-        h('summary', null, t('ins.explainSummary')),
-        h('ul', null,
-          h('li', null, t('ins.explainMerge')),
-          h('li', null, t('ins.explainDedupe')),
-          h('li', null, t('ins.explainTiming'))));
+        statusText === ''
+          ? null
+          : h('span', {
+            className: `dx-save-status${status === 'error' ? ' dx-save-error' : ''}`,
+            role: status === 'error' ? 'alert' : 'status',
+          }, statusText));
 
       return h('div', { className: 'dx-setting' },
         settingHead(t, 'ins.title', 'ins.desc'),
-        h('div', { className: 'dx-card' }, meta, emptyRow, editor, footer),
-        noticeRow,
-        conflictRow,
-        warnings,
-        explainer);
+        h('div', { className: 'dx-card' }, meta, editor, footer));
     }
     //#endregion
 
@@ -951,4 +852,5 @@ window.__ModuleLoader__.load({
     };
   },
 });
+
 
