@@ -50,6 +50,8 @@ icon.svg                   插件图标
 4. 字典同时补 `zh` / `en`（键加 `<id>.` 前缀），面板用 `translator(props)` 取 `t`。
 5. 在 `test/host.test.mjs` 里补路由断言。
 
+往宿主已有设置页（如 `settings.general.item`）插行时，行标题后要用 `extensionBadge(t)` 带上「扩展」小徽标，让用户分得清内置项和扩展项；行组件还要自带 `<style>`，因为宿主页面不会挂载本包的分区组件。
+
 面板收到的 props 只有 `{ t }`（`t` 已绑定本包命名空间），不要 `require` 任何 Harness Client 包。
 
 ## 迁移与回退

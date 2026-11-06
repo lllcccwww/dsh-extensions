@@ -64,7 +64,8 @@ window.__ModuleLoader__.load({
 
       'settings.title': '回答完成通知',
       'settings.description': '应用窗口最小化或不在前台时，回答完成后发送桌面通知。',
-      'settings.test': '测试',
+      'badge.label': '扩展',
+      'badge.hint': '这一行由 DSH扩展 提供',
       'notify.title': '回答完成通知',
       'notify.intro': '窗口最小化或不在前台时，回答结束后发一条系统通知；点击通知会恢复窗口并打开对应会话。',
       'notify.toggle': '启用通知',
@@ -128,7 +129,8 @@ window.__ModuleLoader__.load({
 
       'settings.title': 'Completion notifications',
       'settings.description': 'Send a desktop notification when an answer finishes while the window is minimized or in the background.',
-      'settings.test': 'Test',
+      'badge.label': 'Extension',
+      'badge.hint': 'This row is provided by DSH extensions',
       'notify.title': 'Completion notifications',
       'notify.intro': 'When the window is minimized or in the background, a finished answer sends a system notification; clicking it restores the window and opens that session.',
       'notify.toggle': 'Enable notifications',
@@ -213,6 +215,8 @@ window.__ModuleLoader__.load({
 .dx-row{display:flex;align-items:center;gap:8px;padding:16px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
 .dx-row-text{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0;padding-right:48px}
 .dx-row-title{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}
+.dx-row-title-line{display:flex;align-items:center;gap:6px;min-width:0}
+.dx-badge{display:inline-flex;align-items:center;flex:none;height:18px;padding:0 6px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px;font-weight:400;white-space:nowrap}
 .dx-row-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 `;
 
@@ -770,6 +774,18 @@ window.__ModuleLoader__.load({
     }
 
     /** One General-settings row that keeps the quick notification switch. */
+    /**
+     * Quiet chip marking a Settings row this bundle contributed, so it reads as
+     * third-party beside built-in rows without shouting.
+     */
+    function extensionBadge(t) {
+      return h('span', {
+        className: 'dx-badge',
+        title: t('badge.hint'),
+      }, t('badge.label'));
+    }
+
+    /** One General-settings row: the quick switch for completion notifications. */
     function NotifyRow(props) {
       const t = translator(props);
       const enabled = React.useSyncExternalStore(
@@ -782,27 +798,15 @@ window.__ModuleLoader__.load({
         notificationPreference.set(next);
         if (next) void ensureNotificationPermission();
       };
-      const sendTest = () => {
-        void presentCompletion({
-          title: t('notify.test.title'),
-          body: t('notify.test.body'),
-          sessionId: 'test',
-          force: true,
-        });
-      };
       return h(React.Fragment, null,
         h('style', { key: 'style' }, CSS),
         h('div', { className: 'dx-row' },
           h('div', { className: 'dx-row-text' },
-            h('div', { className: 'dx-row-title' }, t('settings.title')),
+            h('div', { className: 'dx-row-title-line' },
+              h('span', { className: 'dx-row-title' }, t('settings.title')),
+              extensionBadge(t)),
             h('div', { className: 'dx-row-desc' }, t('settings.description'))),
           h('div', { className: 'dx-actions' },
-            h('button', {
-              type: 'button',
-              className: 'dx-btn dx-btn-ghost',
-              disabled: !enabled,
-              onClick: sendTest,
-            }, t('settings.test')),
             h('button', {
               type: 'button',
               role: 'switch',
