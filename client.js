@@ -14,8 +14,6 @@ window.__ModuleLoader__.load({
 
     /** Locale namespace owned by this bundle. */
     const NS = 'dhExtensions';
-    /** Last selected tab, so reopening Settings returns to the same feature. */
-    const TAB_KEY = 'dsh.dh-extensions.tab';
     /** Unchanged from the standalone plugin so an existing preference survives. */
     const NOTIFY_KEY = 'dsh.turn-notify.enabled';
     const STATE_URL = '/dh/instructions/state';
@@ -25,13 +23,11 @@ window.__ModuleLoader__.load({
 
     const zh = {
       nav: 'DSH扩展',
-      intro: '一个入口收着几个小功能，各自独立开关。后面新增的功能也会出现在这里。',
-      'tabs.label': '功能',
-      'crash.title': '这一页没能渲染',
-      'crash.hint': '其它页不受影响；刷新页面可以重试。',
+      'crash.title': '这一项没能渲染',
+      'crash.hint': '其它配置项不受影响；刷新页面可以重试。',
 
       'ins.title': '全局 AGENTS.md',
-      'ins.intro': '为所有会话准备全局 AGENTS.md。它与每个项目的 AGENTS.md 一起加载，项目里更具体的文件优先。',
+      'ins.desc': '所有会话都会加载；项目里的 AGENTS.md 更具体，优先。',
       'ins.loading': '正在读取…',
       'ins.retry': '重试',
       'ins.readFailed': '读取全局 AGENTS.md 失败',
@@ -67,20 +63,13 @@ window.__ModuleLoader__.load({
       'badge.label': '扩展',
       'badge.hint': '这一行由 DSH扩展 提供',
       'notify.title': '回答完成通知',
-      'notify.intro': '窗口最小化或不在前台时，回答结束后发一条系统通知；点击通知会恢复窗口并打开对应会话。',
-      'notify.toggle': '启用通知',
-      'notify.statusOn': '已开启',
-      'notify.statusOff': '已关闭',
-      'notify.test': '发送测试通知',
-      'notify.permission': '系统通知权限',
+      'notify.desc': '窗口最小化或在后台时，回答结束发系统通知。',
+      'notify.test': '发送测试',
+      'notify.permission': '系统权限',
       'notify.permGranted': '已允许',
-      'notify.permDenied': '已拒绝（需在系统设置里重新允许）',
-      'notify.permDefault': '尚未授权（下次通知时会询问）',
+      'notify.permDenied': '已拒绝，需在系统设置里恢复',
+      'notify.permDefault': '尚未授权',
       'notify.unsupported': '当前环境不支持系统通知',
-      'notify.foregroundHint': '窗口在前台且聚焦时不会打扰；测试会忽略这个判断。',
-      'notify.limits': '限制',
-      'notify.limit1': '页面必须还在运行：最小化或隐藏到托盘都可以，退出应用后不会通知。',
-      'notify.limit2': '通知的图标、声音与展示样式由操作系统决定。',
       'notify.body': '「{title}」已完成回答',
       'notify.bodyFallback': '会话已完成回答',
       'notify.done': '回答完成',
@@ -90,13 +79,11 @@ window.__ModuleLoader__.load({
 
     const en = {
       nav: 'DSH extensions',
-      intro: 'One entry collects a few small features, each with its own switch. Features added later show up here too.',
-      'tabs.label': 'Features',
-      'crash.title': 'This panel failed to render',
-      'crash.hint': 'Other panels keep working; reload the page to retry.',
+      'crash.title': 'This setting failed to render',
+      'crash.hint': 'Other settings keep working; reload the page to retry.',
 
       'ins.title': 'Global AGENTS.md',
-      'ins.intro': 'Prepare a global AGENTS.md for every session. It loads together with each project AGENTS.md, and the more specific project file takes precedence.',
+      'ins.desc': 'Loaded by every session; a project AGENTS.md is more specific and takes precedence.',
       'ins.loading': 'Reading…',
       'ins.retry': 'Retry',
       'ins.readFailed': 'Could not read the global AGENTS.md',
@@ -132,20 +119,13 @@ window.__ModuleLoader__.load({
       'badge.label': 'Extension',
       'badge.hint': 'This row is provided by DSH extensions',
       'notify.title': 'Completion notifications',
-      'notify.intro': 'When the window is minimized or in the background, a finished answer sends a system notification; clicking it restores the window and opens that session.',
-      'notify.toggle': 'Enable notifications',
-      'notify.statusOn': 'On',
-      'notify.statusOff': 'Off',
-      'notify.test': 'Send a test notification',
-      'notify.permission': 'System notification permission',
+      'notify.desc': 'Notifies you when an answer finishes while the window is minimized or in the background.',
+      'notify.test': 'Send test',
+      'notify.permission': 'System permission',
       'notify.permGranted': 'Allowed',
-      'notify.permDenied': 'Denied (allow it again in system settings)',
-      'notify.permDefault': 'Not requested yet (asked on the next notification)',
+      'notify.permDenied': 'Denied; allow it again in system settings',
+      'notify.permDefault': 'Not granted yet',
       'notify.unsupported': 'This environment does not support system notifications',
-      'notify.foregroundHint': 'Nothing fires while the window is focused in front; a test ignores that check.',
-      'notify.limits': 'Limits',
-      'notify.limit1': 'The page must still be running: minimized or hidden to the tray is fine, a quit application is not.',
-      'notify.limit2': 'The icon, sound, and presentation of a notification are decided by the operating system.',
       'notify.body': '“{title}” has finished answering',
       'notify.bodyFallback': 'The session has finished answering',
       'notify.done': 'Answer ready',
@@ -154,18 +134,18 @@ window.__ModuleLoader__.load({
     };
 
     const CSS = `
-.dx-root{display:flex;flex-direction:column;gap:14px;padding:2px 0 28px}
-.dx-head{display:flex;flex-direction:column;gap:4px}
-.dx-title{margin:0;color:var(--dsw-alias-label-primary);font-size:16px;font-weight:500;line-height:24px}
-.dx-intro{margin:0;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px}
-.dx-tabs{display:flex;align-items:center;gap:4px;padding:3px;border-radius:calc(var(--dsw-radius-md,10px) + 2px);background:var(--dsw-alias-bg-module-platform);align-self:flex-start;max-width:100%;overflow-x:auto}
-.dx-tab{font:inherit;font-size:13px;line-height:18px;padding:5px 12px;border:none;border-radius:var(--dsw-radius-md,10px);background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;white-space:nowrap}
-.dx-tab:hover{background:var(--dsw-alias-interactive-bg-hover)}
-.dx-tab[aria-selected="true"]{background:var(--dsw-alias-bg-base,#fff);color:var(--dsw-alias-label-primary);box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.dx-tab:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
-.dx-panel{display:flex;flex-direction:column;gap:14px}
-.dx-panel-title{margin:0;color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}
-.dx-panel-intro{margin:0;color:var(--dsw-alias-label-tertiary);font-size:12.5px;line-height:19px}
+.dx-root{display:flex;flex-direction:column;padding:2px 0 8px}
+.dx-setting{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.dx-setting:last-child{border-bottom:none}
+.dx-setting-head{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dx-setting-title{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}
+.dx-setting-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.dx-setting-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px}
+.dx-setting-text{display:flex;flex-direction:column;gap:4px;min-width:0;padding-right:32px}
+.dx-setting-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:-2px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.dx-link{font:inherit;font-size:12px;line-height:18px;padding:0;border:none;background:transparent;color:var(--dsw-alias-brand-primary);cursor:pointer}
+.dx-link:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}
+.dx-link:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dx-card{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-module-platform)}
 .dx-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:20px}
 .dx-path{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:18px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base,transparent);border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:1px 6px}
@@ -198,17 +178,12 @@ window.__ModuleLoader__.load({
 .dx-explain{margin-top:2px;color:var(--dsw-alias-label-tertiary);font-size:12.5px;line-height:19px}
 .dx-explain summary{cursor:pointer;font-size:12.5px;line-height:19px}
 .dx-explain ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
-.dx-switch-row{display:flex;align-items:center;gap:12px;justify-content:space-between}
-.dx-switch-text{display:flex;flex-direction:column;gap:2px;min-width:0}
 .dx-switch{position:relative;flex:none;width:40px;height:22px;padding:0;border:none;border-radius:999px;background:var(--dsw-alias-bg-module-platform);cursor:pointer;transition:background .15s ease}
 .dx-switch:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .dx-switch[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
 .dx-switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .dx-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s ease}
 .dx-switch[aria-checked="true"] .dx-knob{transform:translateX(18px)}
-.dx-kv{display:flex;align-items:baseline;gap:8px;font-size:12.5px;line-height:19px}
-.dx-k{color:var(--dsw-alias-label-tertiary);flex:none}
-.dx-v{color:var(--dsw-alias-label-primary)}
 .dx-error{padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px)}
 .dx-error-title{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}
 .dx-error-hint{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;margin-top:4px}
@@ -246,6 +221,13 @@ window.__ModuleLoader__.load({
     function translator(props) {
       if (typeof props?.t === 'function') return props.t;
       return (key) => zh[key] ?? key;
+    }
+
+    /** Title plus one-line description for a settings row. */
+    function settingHead(t, titleKey, descKey) {
+      return h('div', { className: 'dx-setting-head' },
+        h('div', { className: 'dx-setting-title' }, t(titleKey)),
+        h('div', { className: 'dx-setting-desc' }, t(descKey)));
     }
 
     /** Fetch one JSON document from the Host half. */
@@ -586,15 +568,14 @@ window.__ModuleLoader__.load({
       };
 
       if (phase === 'loading') {
-        return h('div', { className: 'dx-panel' },
-          h('h3', { className: 'dx-panel-title' }, t('ins.title')),
-          h('p', { className: 'dx-panel-intro' }, t('ins.loading')));
+        return h('div', { className: 'dx-setting' },
+          settingHead(t, 'ins.title', 'ins.desc'),
+          h('p', { className: 'dx-warn' }, t('ins.loading')));
       }
 
       if (phase === 'error') {
-        return h('div', { className: 'dx-panel' },
-          h('h3', { className: 'dx-panel-title' }, t('ins.title')),
-          h('p', { className: 'dx-panel-intro' }, t('ins.intro')),
+        return h('div', { className: 'dx-setting' },
+          settingHead(t, 'ins.title', 'ins.desc'),
           h('div', { className: 'dx-notice dx-notice-error', role: 'alert' },
             `${t('ins.readFailed')}: ${error}`),
           h('div', { className: 'dx-actions' },
@@ -690,9 +671,8 @@ window.__ModuleLoader__.load({
           h('li', null, t('ins.explainDedupe')),
           h('li', null, t('ins.explainTiming'))));
 
-      return h('div', { className: 'dx-panel' },
-        h('h3', { className: 'dx-panel-title' }, t('ins.title')),
-        h('p', { className: 'dx-panel-intro' }, t('ins.intro')),
+      return h('div', { className: 'dx-setting' },
+        settingHead(t, 'ins.title', 'ins.desc'),
         h('div', { className: 'dx-card' }, meta, emptyRow, editor, footer),
         noticeRow,
         conflictRow,
@@ -738,39 +718,27 @@ window.__ModuleLoader__.load({
         }).then(() => setPermission(permissionLabel(t)), () => {});
       };
 
-      return h('div', { className: 'dx-panel' },
-        h('h3', { className: 'dx-panel-title' }, t('notify.title')),
-        h('p', { className: 'dx-panel-intro' }, t('notify.intro')),
-        h('div', { className: 'dx-card' },
-          h('div', { className: 'dx-switch-row' },
-            h('div', { className: 'dx-switch-text' },
-              h('div', { className: 'dx-row-title' }, t('notify.toggle')),
-              h('div', { className: 'dx-row-desc' },
-                enabled ? t('notify.statusOn') : t('notify.statusOff'))),
-            h('button', {
-              type: 'button',
-              role: 'switch',
-              'aria-checked': enabled ? 'true' : 'false',
-              'aria-label': t('notify.toggle'),
-              className: 'dx-switch',
-              onClick: toggle,
-            }, h('span', { className: 'dx-knob' }))),
-          h('div', { className: 'dx-kv' },
-            h('span', { className: 'dx-k' }, t('notify.permission')),
-            h('span', { className: 'dx-v' }, permission)),
-          h('div', { className: 'dx-actions' },
-            h('button', {
-              type: 'button',
-              className: 'dx-btn dx-btn-ghost',
-              disabled: !enabled,
-              onClick: sendTest,
-            }, t('notify.test')))),
-        h('p', { className: 'dx-warn' }, t('notify.foregroundHint')),
-        h('details', { className: 'dx-explain' },
-          h('summary', null, t('notify.limits')),
-          h('ul', null,
-            h('li', null, t('notify.limit1')),
-            h('li', null, t('notify.limit2')))));
+      return h('div', { className: 'dx-setting' },
+        h('div', { className: 'dx-setting-row' },
+          h('div', { className: 'dx-setting-text' },
+            h('div', { className: 'dx-setting-title' }, t('notify.title')),
+            h('div', { className: 'dx-setting-desc' }, t('notify.desc'))),
+          h('button', {
+            type: 'button',
+            role: 'switch',
+            'aria-checked': enabled ? 'true' : 'false',
+            'aria-label': t('notify.title'),
+            className: 'dx-switch',
+            onClick: toggle,
+          }, h('span', { className: 'dx-knob' }))),
+        h('div', { className: 'dx-setting-foot' },
+          h('span', null, `${t('notify.permission')} · ${permission}`),
+          h('button', {
+            type: 'button',
+            className: 'dx-link',
+            disabled: !enabled,
+            onClick: sendTest,
+          }, t('notify.test'))));
     }
 
     /** One General-settings row that keeps the quick notification switch. */
@@ -848,73 +816,15 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** Feature tabs rendered as one settings section. */
-    const FEATURES = [
-      { id: 'instructions', titleKey: 'ins.title', Panel: InstructionsPanel },
-      { id: 'notify', titleKey: 'notify.title', Panel: NotifyPanel },
-    ];
-
-    /** Persisted tab choice; an unknown id falls back to the first feature. */
-    function initialTab() {
-      try {
-        const saved = localStorage.getItem(TAB_KEY);
-        if (typeof saved === 'string' && FEATURES.some((feature) => feature.id === saved)) return saved;
-      } catch {
-        // Storage can be disabled.
-      }
-      return FEATURES[0].id;
-    }
-
-    /** The DSH extensions settings section. */
+    /** The DSH extensions settings page: stacked settings rows, like General. */
     function DhExtensionsSection(props) {
       const t = translator(props);
-      const [tab, setTab] = React.useState(initialTab);
-
-      const select = (id) => {
-        setTab(id);
-        try {
-          localStorage.setItem(TAB_KEY, id);
-        } catch {
-          // The tab still switches for this session.
-        }
-      };
-
-      const onTabKeyDown = (event) => {
-        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-        event.preventDefault();
-        const index = FEATURES.findIndex((feature) => feature.id === tab);
-        const delta = event.key === 'ArrowRight' ? 1 : -1;
-        const next = FEATURES[(index + delta + FEATURES.length) % FEATURES.length];
-        select(next.id);
-        const node = event.currentTarget.parentElement?.querySelector(`[data-tab="${next.id}"]`);
-        node?.focus?.();
-      };
-
-      const active = FEATURES.find((feature) => feature.id === tab) ?? FEATURES[0];
-      const Panel = active.Panel;
-
       return h('section', { className: 'dx-root' },
         h('style', null, CSS),
-        h('div', { className: 'dx-head' },
-          h('h2', { className: 'dx-title' }, t('nav')),
-          h('p', { className: 'dx-intro' }, t('intro'))),
-        h('div', {
-          className: 'dx-tabs',
-          role: 'tablist',
-          'aria-label': t('tabs.label'),
-        }, FEATURES.map((feature) => h('button', {
-          key: feature.id,
-          type: 'button',
-          role: 'tab',
-          'data-tab': feature.id,
-          'aria-selected': feature.id === tab ? 'true' : 'false',
-          tabIndex: feature.id === tab ? 0 : -1,
-          className: 'dx-tab',
-          onClick: () => select(feature.id),
-          onKeyDown: onTabKeyDown,
-        }, t(feature.titleKey)))),
-        h(PanelBoundary, { t, key: active.id },
-          h(Panel, { t })));
+        h(PanelBoundary, { t, key: 'instructions' },
+          h(InstructionsPanel, { t })),
+        h(PanelBoundary, { t, key: 'notify' },
+          h(NotifyPanel, { t })));
     }
     //#endregion
 
