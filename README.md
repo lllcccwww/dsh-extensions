@@ -75,5 +75,6 @@ node test/host.test.mjs
 - 文件超过 1 MiB 时只读前 1 MiB，任何保存都会失败并在状态行报错。
 - 自动保存与外部编辑冲突时，以编辑器中的文字为准（自动带 `force` 重试一次）；关闭设置面板时会对未保存的草稿补发一次 `keepalive` 请求。
 - 本项目是 `link:` 安装：改 `client.js` 需重启应用才会加载新的 JS 模块；只改页面文案也要重启。
+- 侧边栏账号菜单（设置 / 意见反馈 / 退出登录）无法注入自定义项：它由 `ui-settings-account` 的 `AccountMenu` 整体渲染，`settings.launcher` 在宿主里是 `kind: "single"`，组件内部也没有子槽；同时 `openSection(id)` 只传给 `settings.onboarding` 与外壳内部，普通插件无法让设置直接落到本分区。要改只能整套替换账号菜单，代价不可接受。
 
 
