@@ -2,6 +2,16 @@
 
 一个设置入口，收着若干小功能。目前两页：
 
+## 安装
+
+插件管理器 → 添加插件，粘贴下面的 Git 地址，装好后重启应用：
+
+```
+github:lllcccwww/dsh-extensions
+```
+
+开发时也可以把本地目录直接交给 `plugin_manager` 的 `install_bundle`（本仓库根目录就是插件包）。
+
 | 页 | 做什么 |
 |---|---|
 | 全局 AGENTS.md | 直接编辑 `$DSH_HOME/AGENTS.md`（默认 `~/.dsh/AGENTS.md`），也就是每个会话都会加载的用户全局指令 |
