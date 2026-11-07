@@ -13,6 +13,7 @@ const home = mkdtempSync(join(tmpdir(), 'dh-extensions-'));
 process.env.DSH_HOME = home;
 process.env.DSH_AGENTS_HOME = join(home, '.agents');
 process.env.DH_EXTENSIONS_NO_FOCUS_HELPER = '1';
+process.env.DH_EXTENSIONS_NO_SANDBOX_LAUNCH = '1';
 
 const { apply } = await import('../index.js');
 
@@ -35,6 +36,7 @@ assert.deepEqual([...routes.keys()].sort(), [
   '/dh/instructions/save',
   '/dh/instructions/state',
   '/dh/notify/focus',
+  '/dh/sandbox/repair',
 ]);
 
 /**
@@ -121,6 +123,32 @@ assert.equal(probe.json.ok, true);
 assert.equal(typeof probe.json.last, 'string');
 assert.equal((await call('/dh/notify/focus', 'PUT')).status, 405);
 assert.equal((await call('/dh/notify/focus', 'DELETE')).status, 405);
+
+// Sandbox repair: method and path validation answer before any launcher runs.
+assert.equal((await call('/dh/sandbox/repair', 'GET')).status, 405);
+assert.equal((await call('/dh/sandbox/repair', 'POST', {})).status, 400);
+assert.equal((await call('/dh/sandbox/repair', 'POST', { path: '' })).status, 400);
+assert.equal((await call('/dh/sandbox/repair', 'POST', { path: 7 })).status, 400);
+assert.equal((await call('/dh/sandbox/repair', 'POST', { path: 'relative\\dir' })).status, 400);
+assert.equal((await call('/dh/sandbox/repair', 'POST', { path: join(home, 'missing') })).status, 400);
+assert.equal((await call('/dh/sandbox/repair', 'POST', 'not json')).status, 400);
+
+if (process.platform === 'win32') {
+  const workspace = join(home, 'workspace');
+  mkdirSync(workspace);
+  const repair = await call('/dh/sandbox/repair', 'POST', { path: workspace });
+  // The launch shortcut keeps the test free of UAC prompts; the route still
+  // validates the path and answers 200.
+  assert.equal(repair.status, 200);
+  assert.equal(repair.json.launched, false);
+}
+
+// Windows PowerShell reads a script as ANSI unless it starts with a BOM, and
+// both sandbox assets print Chinese, so a missing BOM breaks them at parse time.
+for (const name of ['open-repair.ps1', 'repair-sandbox-acl.ps1']) {
+  const asset = new URL(`../features/sandbox/assets/${name}`, import.meta.url);
+  assert.deepEqual([...readFileSync(asset).subarray(0, 3)], [0xef, 0xbb, 0xbf], `${name} starts with a UTF-8 BOM`);
+}
 
 rmSync(home, { recursive: true, force: true });
 console.log('host aggregate checks passed');

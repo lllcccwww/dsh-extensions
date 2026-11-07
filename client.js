@@ -17,9 +17,14 @@ window.__ModuleLoader__.load({
     const NS = 'dhExtensions';
     /** Unchanged from the standalone plugin so an existing preference survives. */
     const NOTIFY_KEY = 'dsh.turn-notify.enabled';
+    /** Whether the workspace menu carries the sandbox repair item. */
+    const REPAIR_MENU_KEY = 'dsh.workspace-repair.enabled';
     const STATE_URL = '/dh/instructions/state';
     const SAVE_URL = '/dh/instructions/save';
     const FOCUS_URL = '/dh/notify/focus';
+    const REPAIR_URL = '/dh/sandbox/repair';
+    /** Glyph key registered for the workspace repair item. */
+    const REPAIR_ICON_KEY = 'dh-extensions.repair';
     const NOTICE_TTL_MS = 3200;
 
     const zh = {
@@ -54,6 +59,12 @@ window.__ModuleLoader__.load({
       'notify.done': '回答完成',
       'notify.test.title': '通知已开启',
       'notify.test.body': '窗口最小化或不在前台时，回答完成后会在这里提醒你。',
+
+      'sandbox.title': '修复沙箱权限',
+      'sandbox.desc': '显示在工作区右键和「…」菜单里',
+      'sandbox.menu': '修复沙箱权限',
+      'sandbox.opened': '已打开管理员窗口，修复正在运行；结果看窗口最后一行',
+      'sandbox.failed': '没能打开修复窗口',
     };
 
     const en = {
@@ -88,6 +99,12 @@ window.__ModuleLoader__.load({
       'notify.done': 'Answer ready',
       'notify.test.title': 'Notifications are on',
       'notify.test.body': 'When the window is minimized or in the background, a finished answer is announced here.',
+
+      'sandbox.title': 'Repair sandbox access',
+      'sandbox.desc': 'Show it in the Workspace right-click and “…” menus',
+      'sandbox.menu': 'Repair sandbox access',
+      'sandbox.opened': 'The elevated window is running the repair; read its last line for the result',
+      'sandbox.failed': 'Could not open the repair window',
     };
 
     const CSS = `
@@ -162,15 +179,20 @@ window.__ModuleLoader__.load({
     }
     //#endregion
 
-    //#region notify preference
-    /** A localStorage-backed boolean shared by the Settings row and the panel. */
-    function createToastPreference() {
-      let value = true;
+    //#region stored preferences
+    /**
+     * A localStorage-backed boolean shared by a Settings row and the code that
+     * acts on it. Storage can be unavailable; the in-memory value still applies.
+     * @param key - localStorage key, kept stable across releases.
+     * @param fallback - value when nothing is stored.
+     */
+    function createStoredFlag(key, fallback) {
+      let value = fallback;
       try {
-        const raw = localStorage.getItem(NOTIFY_KEY);
-        value = raw === null ? true : raw !== 'false';
+        const raw = localStorage.getItem(key);
+        value = raw === null ? fallback : raw !== 'false';
       } catch {
-        value = true;
+        value = fallback;
       }
       const listeners = new Set();
       return {
@@ -185,9 +207,9 @@ window.__ModuleLoader__.load({
           if (next === value) return;
           value = next;
           try {
-            localStorage.setItem(NOTIFY_KEY, next ? 'true' : 'false');
+            localStorage.setItem(key, next ? 'true' : 'false');
           } catch {
-            // Storage can be disabled; the session preference still applies.
+            // Storage can be disabled; the in-memory preference still applies.
           }
           for (const listener of [...listeners]) {
             try {
@@ -200,7 +222,8 @@ window.__ModuleLoader__.load({
       };
     }
 
-    const notificationPreference = createToastPreference();
+    const notificationPreference = createStoredFlag(NOTIFY_KEY, true);
+    const repairMenuPreference = createStoredFlag(REPAIR_MENU_KEY, true);
     //#endregion
 
     //#region notification runtime
@@ -365,6 +388,67 @@ window.__ModuleLoader__.load({
       };
       notification.onclose = () => releaseNotification(tag);
       notification.onerror = () => releaseNotification(tag);
+    }
+    //#endregion
+
+    //#region workspace repair menu
+    /** Whether this renderer runs on Windows, where the repair is implemented. */
+    const onWindows = typeof navigator === 'undefined'
+      ? false
+      : /Windows/i.test(navigator.userAgent ?? '');
+
+    /**
+     * Shield glyph for the repair item. The menu aligns every row on a 16px
+     * slot, and the built-in glyphs come from a package this bundle must not
+     * import, so the icon is drawn here.
+     */
+    function RepairIcon() {
+      return h('svg', {
+        width: 16,
+        height: 16,
+        viewBox: '0 0 16 16',
+        fill: 'none',
+        'aria-hidden': 'true',
+        focusable: 'false',
+      },
+      h('path', {
+        d: 'M8 1.75 13 3.6v4.05c0 3.03-2.06 5.3-5 6.35-2.94-1.05-5-3.32-5-6.35V3.6L8 1.75Z',
+        stroke: 'currentColor',
+        strokeWidth: 1.4,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+      }),
+      h('path', {
+        d: 'm5.7 7.9 1.5 1.5 3.1-3.1',
+        stroke: 'currentColor',
+        strokeWidth: 1.4,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+      }));
+    }
+
+    /**
+     * Ask the Host to open the elevated repair window for one Workspace. The
+     * request stays open while the user answers the UAC prompt, so the outcome
+     * can be reported either way.
+     * @param path - Workspace root captured from the menu target.
+     * @param t - translator bound to this bundle's namespace.
+     * @param ctx - applied Client plugin context.
+     */
+    async function requestRepair(path, t, ctx) {
+      try {
+        const response = await fetch(REPAIR_URL, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ path }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error ?? `HTTP ${response.status}`);
+        ctx.contextMenus.notify(t('sandbox.opened'), true);
+      } catch (reason) {
+        const message = reason instanceof Error ? reason.message : String(reason);
+        ctx.contextMenus.notify(`${t('sandbox.failed')}: ${message}`, false);
+      }
     }
     //#endregion
 
@@ -638,6 +722,31 @@ window.__ModuleLoader__.load({
 
     //#endregion
 
+    //#region sandbox menu panel
+    /** Settings switch for the workspace repair item; only the registration follows it. */
+    function SandboxMenuPanel(props) {
+      const t = translator(props);
+      const enabled = React.useSyncExternalStore(
+        repairMenuPreference.subscribe,
+        repairMenuPreference.getSnapshot,
+        repairMenuPreference.getSnapshot,
+      );
+      if (!onWindows) return null;
+      return h('div', { className: 'dx-setting dx-setting-row' },
+        h('div', { className: 'dx-setting-text' },
+          h('div', { className: 'dx-setting-title' }, t('sandbox.title')),
+          h('div', { className: 'dx-setting-desc' }, t('sandbox.desc'))),
+        h('button', {
+          type: 'button',
+          role: 'switch',
+          'aria-checked': enabled ? 'true' : 'false',
+          'aria-label': t('sandbox.title'),
+          className: 'dx-switch',
+          onClick: () => repairMenuPreference.set(!repairMenuPreference.getSnapshot()),
+        }, h('span', { className: 'dx-knob' })));
+    }
+    //#endregion
+
     //#region hub shell
     /**
      * Isolate one panel: a throwing feature renders a local error instead of
@@ -676,12 +785,14 @@ window.__ModuleLoader__.load({
         h(PanelBoundary, { t, key: 'instructions' },
           h(InstructionsPanel, { t })),
         h(PanelBoundary, { t, key: 'notify' },
-          h(NotifyPanel, { t })));
+          h(NotifyPanel, { t })),
+        h(PanelBoundary, { t, key: 'sandbox-menu' },
+          h(SandboxMenuPanel, { t })));
     }
     //#endregion
 
     return {
-      inject: ['slots', 'locale', 'sessions', 'remote'],
+      inject: ['slots', 'locale', 'sessions', 'remote', 'contextMenus'],
       apply(ctx) {
         const t = ctx.locale.bind(NS);
 
@@ -698,6 +809,48 @@ window.__ModuleLoader__.load({
           label: () => ctx.locale.bind(NS)('nav'),
           locale: NS,
         }, DhExtensionsSection));
+
+        // The one entry outside the Settings section: no other surface carries
+        // a Workspace path. The Settings switch only adds or drops this
+        // registration, so a change takes effect on the next menu opening.
+        if (onWindows) {
+          ctx.slots.inject('contextMenu.icon', () => ctx.slots.register({
+            name: 'contextMenu.icon',
+            key: REPAIR_ICON_KEY,
+          }, RepairIcon));
+        }
+        if (onWindows && ctx.contextMenus !== undefined) {
+          ctx.effect(() => {
+            let dispose = () => {};
+            const sync = () => {
+              dispose();
+              dispose = () => {};
+              if (!repairMenuPreference.getSnapshot()) return;
+              dispose = ctx.contextMenus.register({
+                id: 'dh-extensions.sandbox-repair',
+                target: 'workspace',
+                order: 250,
+                resolve: ({ path }) => (typeof path === 'string' && path !== ''
+                  ? [{
+                    id: 'repair',
+                    icon: { key: REPAIR_ICON_KEY },
+                    label: t('sandbox.menu'),
+                    failureLabel: t('sandbox.failed'),
+                    run: () => requestRepair(path, t, ctx),
+                  }]
+                  : []),
+              });
+            };
+            const stop = repairMenuPreference.subscribe(sync);
+            sync();
+            return () => {
+              stop();
+              dispose();
+            };
+          }, 'dh-extensions: workspace sandbox repair');
+        } else if (onWindows) {
+          console.warn('[dh-extensions] contextMenus is unavailable; the workspace repair item is hidden');
+        }
 
         const list = ctx.sessions?.list;
         const listSnapshot = () => {

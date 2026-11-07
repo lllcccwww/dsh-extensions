@@ -1,6 +1,6 @@
 {
   "name": "@local/dh-extensions",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, and future features",
@@ -37,6 +37,7 @@
         "@deepseek-ai/dsh-client-ui-session",
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-client-ui-context-menu",
         "@deepseek-ai/dsh-api-remotes"
       ]
     }

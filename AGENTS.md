@@ -12,6 +12,8 @@ DSH（DeepSeek Harness）的一个本地 bundle：向设置面板注册「DSH扩
 - 账号菜单（设置 / 意见反馈 / 退出登录）无法插入自定义项：它由 `ui-settings-account` 的 `AccountMenu` 整体渲染，`settings.launcher` 是 `kind: "single"` 且组件内部无子槽；`openSection(id)` 只传给 `settings.onboarding` 与设置外壳内部。要改只能整套替换账号菜单，代价不可接受。
 - Client 模块加载器不支持相对导入，`client.js` 必须是单文件；React 从模块表取。不要 `require` 任何 `@deepseek-ai` Client 包，控件自己写。
 - 一个版本、一次安装、一个失败域：client 每项套 `PanelBoundary`，host 每个 feature 的 `setup` 单独 try/catch。
+- 沙箱标识（`S-1-4-*`）每个工作区不同，**不要写死**；它来自工作区根目录的 ACL。`icacls` 加不了这个标识（报 “No mapping between account names and security IDs”），`Set-Acl` 在受保护 DACL 上会因 `SeSecurityPrivilege` 失败；DACL 用文件系统安全 API（`FileSystemInfo.GetAccessControl/SetAccessControl`，PowerShell 7 走 `FileSystemAclExtensions`），低完整性标签仍用 `icacls /setintegritylevel`。
+- 带中文的 `.ps1` 必须存成 **UTF-8 with BOM**：Windows PowerShell 5.1 没有 BOM 会按 ANSI 读，中文变乱码、脚本直接解析失败。测试里有首字节断言；用编辑工具改过这类脚本后要确认 BOM 还在。
 
 ## 结构
 
@@ -21,6 +23,7 @@ client.js                  client 聚合层（单文件）：字典、行组件�
 features/registry.js       feature 清单与激活顺序
 features/instructions/     host：/dh/instructions/state | /save
 features/notify/           host：/dh/notify/focus + assets（focus-window.ps1、FocusNative.cs）
+features/sandbox/          host：/dh/sandbox/repair + assets（open-repair.ps1 启动器、repair-sandbox-acl.ps1 提权修复；全量核对用内联 C# 编译，逐对象循环只在有对象缺权限时跑）
 shared/paths.js            DSH_HOME / DSH_AGENTS_HOME 解析，与 dsh-home-paths 一致
 shared/http.js             readBody / sendJson
 shared/fs.js               原子写入
@@ -48,7 +51,7 @@ locale/{zh,en}.json        插件列表里的标题与描述
 - **不套外壳**：除输入控件自身的边框，不再包一层卡片、底色或圆角容器。
 - **文案克制**：不写分区介绍、长段落、可折叠说明；状态信息写进描述或作为右侧取值，一行说完。
 - **浮层要留白**：计数、保存状态等浮层放进输入框内部时，给输入框补对应方向的内边距，浮层设 `pointer-events: none`。
-- **配置只进本分区**：所有入口和配置只加在「DSH扩展」分区里，不要往宿主设置页（如 `settings.general.item`）插入行、开关或徽标；宿主页面有自己的排布和文案，插进去既重复又难保持一致。
+- **配置只进本分区**：所有入口和配置只加在「DSH扩展」分区里，不要往宿主设置页（如 `settings.general.item`）插入行、开关或徽标；宿主页面有自己的排布和文案，插进去既重复又难保持一致。唯一例外是工作区右键菜单的「修复沙箱权限」：它处理的是某个工作区的路径，设置页没有这个上下文，所以注册在该菜单，`order` 250（在定位 200 与删除 300 之间）；「DSH扩展」分区里的「修复沙箱权限」开关控制它是否注册。不要据此再往别处加入口。
 - **只用主题 token**：颜色、边框、圆角用 `--dsw-alias-*`，字面颜色只用于图标。
 
 ## 实现规则
@@ -66,7 +69,9 @@ node --check client.js
 node test/host.test.mjs
 ```
 
-测试使用临时 `DSH_HOME`；`DH_EXTENSIONS_NO_FOCUS_HELPER=1` 跳过 `csc.exe` 预编译。UI 改动刷新页面后在「设置 → DSH扩展」实际检查；无法验证渲染时明确说明，不要凭安装成功就宣称样式正确。
+测试使用临时 `DSH_HOME`；`DH_EXTENSIONS_NO_FOCUS_HELPER=1` 跳过 `csc.exe` 预编译，`DH_EXTENSIONS_NO_SANDBOX_LAUNCH=1` 阻止测试弹 UAC。UI 改动刷新页面后在「设置 → DSH扩展」实际检查；无法验证渲染时明确说明，不要凭安装成功就宣称样式正确。
+
+工作区菜单项不在设置分区里，注册后要重启应用，并在任意工作区的「…」菜单确认它出现；修复脚本可先用 `-Check`（启动器）和 `-DryRun`（提权脚本）验证读取与统计，这两档都不改权限。
 
 ## 安装与发布
 
@@ -78,6 +83,7 @@ node test/host.test.mjs
 ## 兼容与迁移
 
 - 通知开关沿用 `localStorage` 键 `dsh.turn-notify.enabled`，不要改。
+- 工作区菜单开关沿用 `localStorage` 键 `dsh.workspace-repair.enabled`，默认开启；它只控制菜单贡献是否注册，不影响修复能力。
 - 与 `dsh-answer-notify` 共存会各监听一次 `api-session/status`，一轮回答弹两条通知；迁移时先卸载旧包。
 - 模块 id 前缀 `dh-` 与路由前缀 `/dh/` 是既有约定，改动会导致已安装 profile 失配，非必要不动。
 
