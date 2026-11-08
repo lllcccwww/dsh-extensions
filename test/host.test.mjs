@@ -1,7 +1,8 @@
 /**
  * Host aggregate checks for the DSH extensions bundle: every feature mounts its
- * routes, the instructions feature keeps its state/save contract, and the
- * notify focus route answers without spawning the window helper.
+ * routes, the instructions feature keeps its state/save contract, the notify
+ * focus route answers without spawning the window helper, and the compatibility
+ * report answers for a healthy bundle.
  */
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -12,27 +13,38 @@ import { Readable } from 'node:stream';
 const home = mkdtempSync(join(tmpdir(), 'dh-extensions-'));
 process.env.DSH_HOME = home;
 process.env.DSH_AGENTS_HOME = join(home, '.agents');
+process.env.DSH_PROFILE_DIR = join(home, 'profiles', 'desktop');
+process.env.DSH_PROFILE = 'desktop';
+process.env.DH_EXTENSIONS_RUNTIME_VERSION = '0.1.5-rc.1';
 process.env.DH_EXTENSIONS_NO_FOCUS_HELPER = '1';
 process.env.DH_EXTENSIONS_NO_SANDBOX_LAUNCH = '1';
+mkdirSync(process.env.DSH_PROFILE_DIR, { recursive: true });
+writeFileSync(join(process.env.DSH_PROFILE_DIR, 'package.json'), JSON.stringify({ name: 'test-profile', private: true }));
 
 const { apply } = await import('../index.js');
+const { unmetRequirements } = await import('../features/compat/host.js');
 
 const routes = new Map();
 /** Minimal Cordis context: `effect` runs immediately and `webServer.register` records the handler. */
+const webServer = {
+  register(route) {
+    routes.set(route.path, route.handler);
+    return () => routes.delete(route.path);
+  },
+};
 const ctx = {
   effect(run, _label) {
     return run();
   },
-  webServer: {
-    register(route) {
-      routes.set(route.path, route.handler);
-      return () => routes.delete(route.path);
-    },
+  get(name) {
+    return name === 'webServer' ? webServer : undefined;
   },
+  webServer,
 };
 apply(ctx);
 
 assert.deepEqual([...routes.keys()].sort(), [
+  '/dh/compat/report',
   '/dh/instructions/save',
   '/dh/instructions/state',
   '/dh/notify/focus',
@@ -149,6 +161,52 @@ for (const name of ['open-repair.ps1', 'repair-sandbox-acl.ps1']) {
   const asset = new URL(`../features/sandbox/assets/${name}`, import.meta.url);
   assert.deepEqual([...readFileSync(asset).subarray(0, 3)], [0xef, 0xbb, 0xbf], `${name} starts with a UTF-8 BOM`);
 }
+
+// Compatibility: the self-check reports the runtime and never errors on a
+// healthy bundle, and requirement evaluation mirrors DSH's precedence.
+const compat = await call('/dh/compat/report', 'GET');
+assert.equal(compat.status, 200);
+assert.equal(compat.json.runtimeVersion, '0.1.5-rc.1');
+assert.equal(compat.json.package.name, '@local/dh-extensions');
+assert.equal(compat.json.status, 'ok');
+assert.ok(Array.isArray(compat.json.groups) && compat.json.groups.length > 0);
+for (const group of compat.json.groups) assert.ok(Array.isArray(group.issues), `${group.id} has issues`);
+const compatErrors = compat.json.groups.flatMap((group) => group.issues).filter((item) => item.level === 'error');
+assert.deepEqual(compatErrors, [], 'healthy bundle has no error-level compatibility issues');
+assert.equal((await call('/dh/compat/report', 'POST')).status, 405);
+
+assert.deepEqual(
+  unmetRequirements(
+    { engines: { dsh: '^0.1.5-rc.1' }, peerDependencies: { '@deepseek-ai/dsh-agent': '^9.0.0' } },
+    '0.1.5-rc.1',
+    (range) => range === '^0.1.5-rc.1',
+  ),
+  {},
+  'engines.dsh decides alone',
+);
+assert.deepEqual(
+  unmetRequirements(
+    { peerDependencies: { '@deepseek-ai/dsh-agent': '^0.1.5', react: '^18' } },
+    '0.1.5-rc.1',
+    (range) => range === '^0.1.5',
+  ),
+  {},
+  'only DSH peers are checked',
+);
+assert.deepEqual(
+  unmetRequirements({ engines: { dsh: '^0.2.0' } }, '0.1.5-rc.1', () => false),
+  { 'engines.dsh': '^0.2.0' },
+);
+assert.deepEqual(
+  unmetRequirements(
+    { peerDependencies: { '@deepseek-ai/dsh-agent': 'workspace:^' } },
+    '0.1.5-rc.1',
+    (range) => range === '0.1.5-rc.1',
+  ),
+  {},
+  'workspace peers mean the current runtime',
+);
+assert.throws(() => unmetRequirements({ engines: { dsh: 7 } }, '0.1.5-rc.1', () => true), /engines\.dsh/u);
 
 rmSync(home, { recursive: true, force: true });
 console.log('host aggregate checks passed');

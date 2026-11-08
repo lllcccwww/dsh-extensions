@@ -1,9 +1,9 @@
 {
   "name": "@local/dh-extensions",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, and future features",
+  "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, sandbox repair, and a compatibility self-check",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lllcccwww/dsh-extensions.git"

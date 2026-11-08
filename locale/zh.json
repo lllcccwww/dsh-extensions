@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "DSH扩展",
-    "description": "把全局 AGENTS.md 编辑、回答完成通知等小功能收在一个设置入口里，后续功能也在这里扩展。"
+    "description": "把全局 AGENTS.md 编辑、回答完成通知、沙箱权限修复和插件兼容性检测收在一个设置入口里。"
   }
 }
 

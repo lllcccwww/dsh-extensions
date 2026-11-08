@@ -24,6 +24,7 @@ features/registry.js       feature 清单与激活顺序
 features/instructions/     host：/dh/instructions/state | /save
 features/notify/           host：/dh/notify/focus + assets（focus-window.ps1、FocusNative.cs）
 features/sandbox/          host：/dh/sandbox/repair + assets（open-repair.ps1 启动器、repair-sandbox-acl.ps1 提权修复；全量核对用内联 C# 编译，逐对象循环只在有对象缺权限时跑）
+features/compat/           host：/dh/compat/report（自检版本要求、bundle 补丁、host/client 入口、前后端路由契约）
 shared/paths.js            DSH_HOME / DSH_AGENTS_HOME 解析，与 dsh-home-paths 一致
 shared/http.js             readBody / sendJson
 shared/fs.js               原子写入
@@ -61,6 +62,8 @@ locale/{zh,en}.json        插件列表里的标题与描述
 - **失败必须可见**：保存、读取失败在状态行给出原因，不要静默吞掉。
 - **文件边界**：只写 `$DSH_HOME/AGENTS.md`；原子替换（临时文件 + rename，失败回退原地写）；上限与加载器一致（1 MiB）。
 - **不要拿 UI 文案当协议**：前后端契约用稳定的 code、路径、字段名，文案只供展示。
+- **不要给本包加 `engines.dsh`**：DSH 会在启动时按它跳过整个 bundle，自检面板也就无法打开。兼容性由 `features/compat` 的只读报告呈现；用户需要 DSH 代为拦截时再显式加。
+- **`dsh.client.inject` 不是可解析的 npm 依赖**：它标识客户端模块图里的包名，部分由应用自身提供，profile 里不一定装；不要用 `require.resolve` 判断它是否存在，只校验数组形状。
 
 ## 测试与验证
 
@@ -69,13 +72,13 @@ node --check client.js
 node test/host.test.mjs
 ```
 
-测试使用临时 `DSH_HOME`；`DH_EXTENSIONS_NO_FOCUS_HELPER=1` 跳过 `csc.exe` 预编译，`DH_EXTENSIONS_NO_SANDBOX_LAUNCH=1` 阻止测试弹 UAC。UI 改动刷新页面后在「设置 → DSH扩展」实际检查；无法验证渲染时明确说明，不要凭安装成功就宣称样式正确。
+测试使用临时 `DSH_HOME`；`DH_EXTENSIONS_NO_FOCUS_HELPER=1` 跳过 `csc.exe` 预编译，`DH_EXTENSIONS_NO_SANDBOX_LAUNCH=1` 阻止测试弹 UAC，`DH_EXTENSIONS_RUNTIME_VERSION` 固定自检用的 DSH 版本，避免依赖本机 profile。UI 改动刷新页面后在「设置 → DSH扩展」实际检查；无法验证渲染时明确说明，不要凭安装成功就宣称样式正确。
 
 工作区菜单项不在设置分区里，注册后要重启应用，并在任意工作区的「…」菜单确认它出现；修复脚本可先用 `-Check`（启动器）和 `-DryRun`（提权脚本）验证读取与统计，这两档都不改权限。
 
 ## 安装与发布
 
-- 本地：`plugin_manager` 的 `install_bundle` 指向本目录；`link:` 安装下改 `client.js` 或 host 代码后必须重启应用才会加载新 JS。
+- 本地：`plugin_manager` 的 `install_bundle` 指向本目录；`link:` 安装下改 `client.js` 或 host 代码后必须完全退出应用（含托盘进程）再启动。只刷新页面只更新 client，host 仍是旧代码（新 route 会 404）。
 - **换路径或重装**：同名包已安装时 `install_bundle` 会返回 `already-installed`，必须先 `remove_bundle` 再 `install_bundle`，否则链接仍指向旧路径。
 - 发布：`main` 推送到 <https://github.com/lllcccwww/dsh-extensions>，用户用 `github:lllcccwww/dsh-extensions` 安装。
 - 改 `package.json` 名称会同时影响 `cordis.patch.yml` 的 `name` 与 `client.js` 的模块 id，需要重新安装 profile。
@@ -86,6 +89,7 @@ node test/host.test.mjs
 - 工作区菜单开关沿用 `localStorage` 键 `dsh.workspace-repair.enabled`，默认开启；它只控制菜单贡献是否注册，不影响修复能力。
 - 与 `dsh-answer-notify` 共存会各监听一次 `api-session/status`，一轮回答弹两条通知；迁移时先卸载旧包。
 - 模块 id 前缀 `dh-` 与路由前缀 `/dh/` 是既有约定，改动会导致已安装 profile 失配，非必要不动。
+- 兼容性报告是只读协议：路由 `/dh/compat/report`，顶层 `status` / `runtimeVersion` / `groups`，每条 issue 的 `code` / `level` 稳定；文案只在 `client.js` 的 `compat.*` 键里。
 
 ## 提交
 

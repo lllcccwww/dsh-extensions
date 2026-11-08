@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "DSH extensions",
-    "description": "One Settings entry for global AGENTS.md editing, completion notifications, and the features added later."
+    "description": "One Settings entry for global AGENTS.md editing, completion notifications, sandbox repair, and a plugin compatibility check."
   }
 }
 

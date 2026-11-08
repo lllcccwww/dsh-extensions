@@ -23,6 +23,7 @@ window.__ModuleLoader__.load({
     const SAVE_URL = '/dh/instructions/save';
     const FOCUS_URL = '/dh/notify/focus';
     const REPAIR_URL = '/dh/sandbox/repair';
+    const COMPAT_URL = '/dh/compat/report';
     /** Glyph key registered for the workspace repair item. */
     const REPAIR_ICON_KEY = 'dh-extensions.repair';
     const NOTICE_TTL_MS = 3200;
@@ -65,6 +66,75 @@ window.__ModuleLoader__.load({
       'sandbox.menu': '修复沙箱权限',
       'sandbox.opened': '已打开管理员窗口，修复正在运行；结果看窗口最后一行',
       'sandbox.failed': '没能打开修复窗口',
+
+      'compat.title': '插件兼容性检测',
+      'compat.desc': '对照当前 DSH 检查本扩展的版本要求、入口和路由',
+      'compat.run': '检测',
+      'compat.retry': '重新检测',
+      'compat.running': '正在检测中…',
+      'compat.failed': '检测失败',
+      'compat.hostOutdated': '宿主端还没有加载检测路由；请完全退出并重启应用，刷新页面不够。',
+      'compat.unknown': '未知',
+      'compat.tooltip.pass': '通过 · DSH {version}',
+      'compat.tooltip.passHints': '通过 · DSH {version} · {count} 条提示',
+      'compat.tooltip.warn': '需要注意 · DSH {version}',
+      'compat.tooltip.fail': '不通过 · DSH {version}',
+
+      'compat.group.environment': '运行环境',
+      'compat.group.manifest': '插件清单',
+      'compat.group.requirements': '版本要求',
+      'compat.group.bundle': 'bundle 补丁',
+      'compat.group.client': '客户端入口',
+      'compat.group.host': '宿主入口',
+      'compat.group.contracts': '内部契约',
+
+      'compat.issue.runtimeUnknown': '无法确定当前 DSH 版本',
+      'compat.issue.manifestParse': 'package.json 无法解析',
+      'compat.issue.manifestName': 'package.json 缺少 name',
+      'compat.issue.manifestVersion': 'package.json 缺少 version',
+      'compat.issue.requirementsMissing': '未声明 engines.dsh；DSH 不会自动拦截版本不匹配',
+      'compat.issue.requirementsUnverified': '已声明要求，但无法校验版本范围',
+      'compat.issue.requirementsRuntimeUnknown': '已声明要求，但当前 DSH 版本未知',
+      'compat.issue.requirementsInvalid': '版本要求字段无效',
+      'compat.issue.requirementsUnmet': '当前 DSH 会拒绝加载：{requirements}',
+      'compat.issue.requirementsExempted': '要求不满足，但已按精确版本豁免',
+      'compat.issue.exemptionsInvalid': 'compatibility.json 存在无效记录',
+      'compat.issue.bundleMissing': '未声明 dsh.bundle',
+      'compat.issue.bundlePatchInvalid': 'dsh.bundle.patch 格式无效',
+      'compat.issue.bundlePatchMissing': '补丁文件不存在：{paths}',
+      'compat.issue.bundlePatchUnverified': '补丁存在，但无法加载 DSH 的补丁解析器',
+      'compat.issue.bundlePatchSyntax': '补丁无法解析',
+      'compat.issue.bundlePatchSelf': '补丁没有插入本插件',
+      'compat.issue.bundlePlatformInvalid': 'dsh.bundle.platforms 格式无效',
+      'compat.issue.bundlePlatformUnsupported': '仅支持 {platforms}，当前是 {platform}',
+      'compat.issue.clientMissingManifest': '未声明 dsh.client',
+      'compat.issue.clientPlatformInvalid': 'client platform 无效',
+      'compat.issue.clientPlatform': 'client platform 是 {platform}，不是 web',
+      'compat.issue.clientImmediatelyInvalid': 'dsh.client.immediately 不是布尔值',
+      'compat.issue.clientInjectInvalid': 'dsh.client.inject 格式无效',
+      'compat.issue.clientExternalInvalid': 'dsh.client.external 格式无效',
+      'compat.issue.clientEntryMissing': '客户端入口不存在',
+      'compat.issue.clientRead': '客户端入口无法读取',
+      'compat.issue.clientSyntax': '客户端入口语法错误',
+      'compat.issue.clientEvaluate': '客户端入口执行失败',
+      'compat.issue.clientRegistration': '客户端入口没有注册模块',
+      'compat.issue.clientIdMismatch': '模块 id {id} 与包名 {name} 不一致',
+      'compat.issue.clientApply': '返回值不是可用的插件对象',
+      'compat.issue.clientApplyRuntime': 'apply 执行失败',
+      'compat.issue.clientServicesMissing': '未声明 apply 的服务依赖',
+      'compat.issue.clientServices': 'apply 的 inject 不是字符串数组',
+      'compat.issue.clientRequireUndeclared': '请求了未声明的模块：{names}',
+      'compat.issue.hostEntryMissing': '宿主入口不存在',
+      'compat.issue.hostLoad': '宿主入口无法加载',
+      'compat.issue.hostApply': '未导出 apply 函数',
+      'compat.issue.hostInject': 'inject 不是字符串数组',
+      'compat.issue.hostInjectWeb': '宿主没有声明 webServer 服务依赖',
+      'compat.issue.hostWebserver': '当前 DSH 缺少 webServer 服务',
+      'compat.issue.contractsRegistry': 'feature 清单无效',
+      'compat.issue.contractsRoutes': '路由不符合 /dh/<id>/ 约定',
+      'compat.issue.contractsClientRead': 'client.js 无法读取',
+      'compat.issue.contractsUnreferenced': '客户端未引用：{paths}',
+      'compat.issue.contractsOrphan': '客户端引用了不存在的路由：{paths}',
     };
 
     const en = {
@@ -105,6 +175,75 @@ window.__ModuleLoader__.load({
       'sandbox.menu': 'Repair sandbox access',
       'sandbox.opened': 'The elevated window is running the repair; read its last line for the result',
       'sandbox.failed': 'Could not open the repair window',
+
+      'compat.title': 'Plugin compatibility',
+      'compat.desc': 'Check this extension’s version requirements, entries, and routes against the running DSH',
+      'compat.run': 'Check',
+      'compat.retry': 'Check again',
+      'compat.running': 'Checking…',
+      'compat.failed': 'Check failed',
+      'compat.hostOutdated': 'The host half has not loaded the check route yet; fully quit and restart the app—reloading the page is not enough.',
+      'compat.unknown': 'unknown',
+      'compat.tooltip.pass': 'Passed · DSH {version}',
+      'compat.tooltip.passHints': 'Passed · DSH {version} · {count} hint(s)',
+      'compat.tooltip.warn': 'Needs attention · DSH {version}',
+      'compat.tooltip.fail': 'Failed · DSH {version}',
+
+      'compat.group.environment': 'Runtime',
+      'compat.group.manifest': 'Manifest',
+      'compat.group.requirements': 'Version requirements',
+      'compat.group.bundle': 'Bundle patch',
+      'compat.group.client': 'Client entry',
+      'compat.group.host': 'Host entry',
+      'compat.group.contracts': 'Internal contracts',
+
+      'compat.issue.runtimeUnknown': 'Could not determine the running DSH version',
+      'compat.issue.manifestParse': 'package.json cannot be parsed',
+      'compat.issue.manifestName': 'package.json has no name',
+      'compat.issue.manifestVersion': 'package.json has no version',
+      'compat.issue.requirementsMissing': 'No engines.dsh declared; DSH will not block a version mismatch',
+      'compat.issue.requirementsUnverified': 'Requirements are declared but the range cannot be checked',
+      'compat.issue.requirementsRuntimeUnknown': 'Requirements are declared but the DSH version is unknown',
+      'compat.issue.requirementsInvalid': 'The version requirement fields are invalid',
+      'compat.issue.requirementsUnmet': 'This DSH version refuses to load it: {requirements}',
+      'compat.issue.requirementsExempted': 'Requirements are unmet but an exact-version exemption is active',
+      'compat.issue.exemptionsInvalid': 'compatibility.json contains invalid records',
+      'compat.issue.bundleMissing': 'No dsh.bundle declared',
+      'compat.issue.bundlePatchInvalid': 'dsh.bundle.patch has an invalid shape',
+      'compat.issue.bundlePatchMissing': 'Patch file missing: {paths}',
+      'compat.issue.bundlePatchUnverified': 'Patch exists but DSH’s patch parser could not be loaded',
+      'compat.issue.bundlePatchSyntax': 'Patch cannot be parsed',
+      'compat.issue.bundlePatchSelf': 'The patch does not mount this plugin',
+      'compat.issue.bundlePlatformInvalid': 'dsh.bundle.platforms has an invalid shape',
+      'compat.issue.bundlePlatformUnsupported': 'Supports only {platforms}; this host is {platform}',
+      'compat.issue.clientMissingManifest': 'No dsh.client declared',
+      'compat.issue.clientPlatformInvalid': 'The client platform is invalid',
+      'compat.issue.clientPlatform': 'The client platform is {platform}, not web',
+      'compat.issue.clientImmediatelyInvalid': 'dsh.client.immediately is not a boolean',
+      'compat.issue.clientInjectInvalid': 'dsh.client.inject has an invalid shape',
+      'compat.issue.clientExternalInvalid': 'dsh.client.external has an invalid shape',
+      'compat.issue.clientEntryMissing': 'The client entry does not exist',
+      'compat.issue.clientRead': 'The client entry cannot be read',
+      'compat.issue.clientSyntax': 'The client entry has a syntax error',
+      'compat.issue.clientEvaluate': 'The client entry fails to execute',
+      'compat.issue.clientRegistration': 'The client entry registers no module',
+      'compat.issue.clientIdMismatch': 'Module id {id} does not match package name {name}',
+      'compat.issue.clientApply': 'The factory did not return a usable plugin object',
+      'compat.issue.clientApplyRuntime': 'apply failed while registering',
+      'compat.issue.clientServicesMissing': 'The apply services are not declared',
+      'compat.issue.clientServices': 'The apply inject is not an array of strings',
+      'compat.issue.clientRequireUndeclared': 'Undeclared modules requested: {names}',
+      'compat.issue.hostEntryMissing': 'The host entry does not exist',
+      'compat.issue.hostLoad': 'The host entry cannot be loaded',
+      'compat.issue.hostApply': 'No apply function is exported',
+      'compat.issue.hostInject': 'inject is not an array of strings',
+      'compat.issue.hostInjectWeb': 'The host half does not declare the webServer service',
+      'compat.issue.hostWebserver': 'The running DSH has no webServer service',
+      'compat.issue.contractsRegistry': 'The feature registry is invalid',
+      'compat.issue.contractsRoutes': 'A route does not follow the /dh/<id>/ convention',
+      'compat.issue.contractsClientRead': 'client.js cannot be read',
+      'compat.issue.contractsUnreferenced': 'The client does not reference: {paths}',
+      'compat.issue.contractsOrphan': 'The client references routes that do not exist: {paths}',
     };
 
     const CSS = `
@@ -122,6 +261,17 @@ window.__ModuleLoader__.load({
 .dx-sub-title{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}
 .dx-sub-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .dx-sub-desc-warn{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary))}
+.dx-compat-actions{display:flex;align-items:center;gap:10px;flex:none}
+.dx-compat-status-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;outline:none;cursor:help}
+.dx-compat-status-icon svg{pointer-events:none}
+.dx-compat-status-icon:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.dx-compat-status-icon-ok{color:var(--dsw-alias-state-success-primary,var(--dsw-alias-brand-primary))}
+.dx-compat-status-icon-warn{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-label-primary))}
+.dx-compat-status-icon-error{color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary))}
+.dx-btn-inline{display:inline-flex;align-items:center;gap:6px}
+.dx-btn[aria-busy="true"]:disabled{opacity:.75}
+.dx-spinner{flex:none;width:14px;height:14px;border:2px solid var(--dsw-alias-border-l2);border-top-color:var(--dsw-alias-brand-primary);border-radius:50%;animation:dx-spin .7s linear infinite}
+@keyframes dx-spin{to{transform:rotate(360deg)}}
 .dx-editor-wrap{position:relative;display:flex;flex-direction:column}
 .dx-editor{width:100%;box-sizing:border-box;min-height:300px;resize:vertical;padding:12px 12px 32px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-base,transparent);color:var(--dsw-alias-label-primary);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:20px;outline:none;tab-size:2}
 .dx-editor:focus{border-color:var(--dsw-alias-brand-primary)}
@@ -747,6 +897,231 @@ window.__ModuleLoader__.load({
     }
     //#endregion
 
+    //#region compatibility panel
+    /** Join one list placeholder for display. */
+    function compactList(value) {
+      return Array.isArray(value) ? value.join(', ') : String(value ?? '');
+    }
+
+    /** Format a requirements object as `name range` pairs. */
+    function formatRequirements(value) {
+      if (value === null || typeof value !== 'object') return '';
+      return Object.entries(value).map(([name, range]) => `${name} ${range}`).join('；');
+    }
+
+    /** First line of a raw diagnostic, bounded so a row stays readable. */
+    function firstLine(value) {
+      const text = String(value ?? '').split(/\r?\n/u)[0].trim();
+      return text.length > 160 ? `${text.slice(0, 160)}…` : text;
+    }
+
+    /** Localized text for one report issue; raw details append after it. */
+    function compatIssueText(t, item) {
+      const data = item.data ?? {};
+      let text;
+      switch (item.code) {
+        case 'runtime-unknown': text = t('compat.issue.runtimeUnknown'); break;
+        case 'manifest-parse': text = t('compat.issue.manifestParse'); break;
+        case 'manifest-name': text = t('compat.issue.manifestName'); break;
+        case 'manifest-version': text = t('compat.issue.manifestVersion'); break;
+        case 'requirements-missing': text = t('compat.issue.requirementsMissing'); break;
+        case 'requirements-unverified': text = t('compat.issue.requirementsUnverified'); break;
+        case 'requirements-runtime-unknown': text = t('compat.issue.requirementsRuntimeUnknown'); break;
+        case 'requirements-invalid': text = t('compat.issue.requirementsInvalid'); break;
+        case 'requirements-unmet':
+          text = t('compat.issue.requirementsUnmet', { requirements: formatRequirements(data.requirements) });
+          break;
+        case 'requirements-exempted': text = t('compat.issue.requirementsExempted'); break;
+        case 'exemptions-invalid': text = t('compat.issue.exemptionsInvalid'); break;
+        case 'bundle-missing': text = t('compat.issue.bundleMissing'); break;
+        case 'bundle-patch-invalid': text = t('compat.issue.bundlePatchInvalid'); break;
+        case 'bundle-patch-missing': text = t('compat.issue.bundlePatchMissing', { paths: compactList(data.paths) }); break;
+        case 'bundle-patch-unverified': text = t('compat.issue.bundlePatchUnverified'); break;
+        case 'bundle-patch-syntax': text = t('compat.issue.bundlePatchSyntax'); break;
+        case 'bundle-patch-self': text = t('compat.issue.bundlePatchSelf'); break;
+        case 'bundle-platform-invalid': text = t('compat.issue.bundlePlatformInvalid'); break;
+        case 'bundle-platform-unsupported':
+          text = t('compat.issue.bundlePlatformUnsupported', { platforms: compactList(data.platforms), platform: data.platform });
+          break;
+        case 'client-missing-manifest': text = t('compat.issue.clientMissingManifest'); break;
+        case 'client-platform-invalid': text = t('compat.issue.clientPlatformInvalid'); break;
+        case 'client-platform': text = t('compat.issue.clientPlatform', { platform: data.platform }); break;
+        case 'client-immediately-invalid': text = t('compat.issue.clientImmediatelyInvalid'); break;
+        case 'client-inject-invalid': text = t('compat.issue.clientInjectInvalid'); break;
+        case 'client-external-invalid': text = t('compat.issue.clientExternalInvalid'); break;
+        case 'client-entry-missing': text = t('compat.issue.clientEntryMissing'); break;
+        case 'client-read': text = t('compat.issue.clientRead'); break;
+        case 'client-syntax': text = t('compat.issue.clientSyntax'); break;
+        case 'client-evaluate': text = t('compat.issue.clientEvaluate'); break;
+        case 'client-registration': text = t('compat.issue.clientRegistration'); break;
+        case 'client-id-mismatch': text = t('compat.issue.clientIdMismatch', { id: data.id, name: data.name }); break;
+        case 'client-apply': text = t('compat.issue.clientApply'); break;
+        case 'client-apply-runtime': text = t('compat.issue.clientApplyRuntime'); break;
+        case 'client-services-missing': text = t('compat.issue.clientServicesMissing'); break;
+        case 'client-services': text = t('compat.issue.clientServices'); break;
+        case 'client-require-undeclared': text = t('compat.issue.clientRequireUndeclared', { names: compactList(data.names) }); break;
+        case 'host-entry-missing': text = t('compat.issue.hostEntryMissing'); break;
+        case 'host-load': text = t('compat.issue.hostLoad'); break;
+        case 'host-apply': text = t('compat.issue.hostApply'); break;
+        case 'host-inject': text = t('compat.issue.hostInject'); break;
+        case 'host-inject-web': text = t('compat.issue.hostInjectWeb'); break;
+        case 'host-webserver': text = t('compat.issue.hostWebserver'); break;
+        case 'contracts-registry': text = t('compat.issue.contractsRegistry'); break;
+        case 'contracts-routes': text = t('compat.issue.contractsRoutes'); break;
+        case 'contracts-client-read': text = t('compat.issue.contractsClientRead'); break;
+        case 'contracts-unreferenced': text = t('compat.issue.contractsUnreferenced', { paths: compactList(data.paths) }); break;
+        case 'contracts-orphan': text = t('compat.issue.contractsOrphan', { paths: compactList(data.paths) }); break;
+        default: text = item.code;
+      }
+      if (item.detail !== undefined) {
+        const detail = firstLine(item.detail);
+        if (detail !== '' && !text.includes(detail)) text = `${text}：${detail}`;
+      }
+      return text;
+    }
+
+    /** One status glyph: check for pass, triangle for notes, cross for failure. */
+    function CompatStatusIcon({ state }) {
+      const svg = {
+        width: 16,
+        height: 16,
+        viewBox: '0 0 16 16',
+        fill: 'none',
+        'aria-hidden': 'true',
+        focusable: 'false',
+      };
+      if (state === 'ok') {
+        return h('svg', svg,
+          h('circle', { cx: 8, cy: 8, r: 6.4, stroke: 'currentColor', strokeWidth: 1.4 }),
+          h('path', {
+            d: 'm5 8.2 2 2 4-4.3',
+            stroke: 'currentColor',
+            strokeWidth: 1.5,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+          }));
+      }
+      if (state === 'warn') {
+        return h('svg', svg,
+          h('path', {
+            d: 'M8 2.2 14 13H2L8 2.2Z',
+            stroke: 'currentColor',
+            strokeWidth: 1.4,
+            strokeLinejoin: 'round',
+          }),
+          h('path', { d: 'M8 6v3.2', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' }),
+          h('circle', { cx: 8, cy: 11.2, r: 0.8, fill: 'currentColor' }));
+      }
+      return h('svg', svg,
+        h('circle', { cx: 8, cy: 8, r: 6.4, stroke: 'currentColor', strokeWidth: 1.4 }),
+        h('path', {
+          d: 'm5.6 5.6 4.8 4.8m0-4.8-4.8 4.8',
+          stroke: 'currentColor',
+          strokeWidth: 1.5,
+          strokeLinecap: 'round',
+        }));
+    }
+
+    /** Self-check against the running DSH: runs on mount and on demand. */
+    function CompatPanel(props) {
+      const t = translator(props);
+      const mounted = React.useRef(true);
+      const [phase, setPhase] = React.useState('loading');
+      const [report, setReport] = React.useState(null);
+      const [error, setError] = React.useState('');
+      const [hostOutdated, setHostOutdated] = React.useState(false);
+
+      const scan = React.useCallback(() => {
+        setPhase('loading');
+        setError('');
+        setHostOutdated(false);
+        requestJson(COMPAT_URL).then(
+          (next) => {
+            if (!mounted.current) return;
+            setReport(next);
+            setPhase('ready');
+          },
+          (reason) => {
+            if (!mounted.current) return;
+            const message = reason instanceof Error ? reason.message : String(reason);
+            setPhase('error');
+            setError(message);
+            setHostOutdated(message === 'HTTP 404');
+          },
+        );
+      }, []);
+
+      React.useEffect(() => {
+        mounted.current = true;
+        scan();
+        return () => {
+          mounted.current = false;
+        };
+      }, [scan]);
+
+      const problems = [];
+      if (report !== null) {
+        for (const group of report.groups ?? []) {
+          for (const item of group.issues ?? []) {
+            if (typeof item.code === 'string' && item.code.endsWith('-ok')) continue;
+            problems.push({ ...item, group: group.id });
+          }
+        }
+      }
+      const hints = problems.filter((item) => item.level === 'info').length;
+      const version = typeof report?.runtimeVersion === 'string' && report.runtimeVersion !== ''
+        ? report.runtimeVersion
+        : t('compat.unknown');
+      const checking = phase === 'loading';
+      const iconState = checking
+        ? null
+        : phase === 'error' ? 'error' : report === null ? null : report.status;
+      let tooltip = '';
+      if (phase === 'error') {
+        tooltip = `${t('compat.failed')}：${hostOutdated ? t('compat.hostOutdated') : error}`;
+      } else if (report !== null) {
+        const head = report.status === 'error'
+          ? t('compat.tooltip.fail', { version })
+          : report.status === 'warn'
+            ? t('compat.tooltip.warn', { version })
+            : hints > 0
+              ? t('compat.tooltip.passHints', { version, count: hints })
+              : t('compat.tooltip.pass', { version });
+        tooltip = [
+          head,
+          ...problems.map((item) => `${t(`compat.group.${item.group}`)}：${compatIssueText(t, item)}`),
+        ].join('\n');
+      }
+      const statusIcon = iconState === null ? null : h('span', {
+        className: `dx-compat-status-icon dx-compat-status-icon-${iconState}`,
+        title: tooltip,
+        'aria-label': tooltip,
+        role: 'img',
+        tabIndex: 0,
+      }, h(CompatStatusIcon, { state: iconState }));
+      const buttonLabel = report === null && phase !== 'error' ? t('compat.run') : t('compat.retry');
+
+      return h('div', { className: 'dx-setting' },
+        h('div', { className: 'dx-setting-row' },
+          h('div', { className: 'dx-setting-text' },
+            h('div', { className: 'dx-setting-title' }, t('compat.title')),
+            h('div', { className: 'dx-setting-desc' }, t('compat.desc'))),
+          h('div', { className: 'dx-compat-actions' },
+            statusIcon,
+            h('button', {
+              type: 'button',
+              className: 'dx-btn dx-btn-ghost dx-btn-sm dx-btn-inline',
+              disabled: checking,
+              'aria-busy': checking ? 'true' : undefined,
+              onClick: scan,
+            }, checking
+              ? h(React.Fragment, null,
+                h('span', { className: 'dx-spinner', 'aria-hidden': 'true' }),
+                t('compat.running'))
+              : buttonLabel))));
+    }
+    //#endregion
+
     //#region hub shell
     /**
      * Isolate one panel: a throwing feature renders a local error instead of
@@ -787,7 +1162,9 @@ window.__ModuleLoader__.load({
         h(PanelBoundary, { t, key: 'notify' },
           h(NotifyPanel, { t })),
         h(PanelBoundary, { t, key: 'sandbox-menu' },
-          h(SandboxMenuPanel, { t })));
+          h(SandboxMenuPanel, { t })),
+        h(PanelBoundary, { t, key: 'compat' },
+          h(CompatPanel, { t })));
     }
     //#endregion
 
