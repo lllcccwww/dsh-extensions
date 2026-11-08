@@ -24,6 +24,8 @@ features/registry.js       feature 清单与激活顺序
 features/instructions/     host：/dh/instructions/state | /save
 features/notify/           host：/dh/notify/focus + assets（focus-window.ps1、FocusNative.cs）
 features/sandbox/          host：/dh/sandbox/repair + assets（open-repair.ps1 启动器、repair-sandbox-acl.ps1 提权修复；全量核对用内联 C# 编译，逐对象循环只在有对象缺权限时跑）
+features/sidechat/         host：/dh/sidechat/fork（sessionController 造子会话、追加边界、改名、flush）
+                           client：右栏「辅助对话」tab + 选区浮条 + 引用 chip 写入子会话输入框
 features/compat/           host：/dh/compat/report（自检版本要求、bundle 补丁、host/client 入口、前后端路由契约）
 shared/paths.js            DSH_HOME / DSH_AGENTS_HOME 解析，与 dsh-home-paths 一致
 shared/http.js             readBody / sendJson
@@ -52,7 +54,7 @@ locale/{zh,en}.json        插件列表里的标题与描述
 - **不套外壳**：除输入控件自身的边框，不再包一层卡片、底色或圆角容器。
 - **文案克制**：不写分区介绍、长段落、可折叠说明；状态信息写进描述或作为右侧取值，一行说完。
 - **浮层要留白**：计数、保存状态等浮层放进输入框内部时，给输入框补对应方向的内边距，浮层设 `pointer-events: none`。
-- **配置只进本分区**：所有入口和配置只加在「DSH扩展」分区里，不要往宿主设置页（如 `settings.general.item`）插入行、开关或徽标；宿主页面有自己的排布和文案，插进去既重复又难保持一致。工作区右键菜单是唯一例外，因为它承载的是「某个工作区」的上下文，设置页没有这个上下文：分区里的「工作区菜单」父项下有两个子项开关，`修复沙箱权限`（`order` 250，Windows 专属，定位 200 与删除 300 之间）和 `归档全部会话`（`order` 260）。两个菜单项各自跟随对应的开关注册；`归档全部会话` 仅在还有未归档的已有会话（不含「新会话」空草稿）时出现，直接通过 `workspaces` 服务批量归档。不要据此再往别处加入口。
+- **配置只进本分区**：所有入口和配置只加在「DSH扩展」分区里，不要往宿主设置页（如 `settings.general.item`）插入行、开关或徽标；宿主页面有自己的排布和文案，插进去既重复又难保持一致。工作区右键菜单是第一个例外，因为它承载的是「某个工作区」的上下文，设置页没有这个上下文：分区里的「工作区菜单」父项下有两个子项开关，`修复沙箱权限`（`order` 250，Windows 专属，定位 200 与删除 300 之间）和 `归档全部会话`（`order` 260）。两个菜单项各自跟随对应的开关注册；`归档全部会话` 仅在还有未归档的已有会话（不含「新会话」空草稿）时出现，直接通过 `workspaces` 服务批量归档。第二个例外是「辅助对话」：它的入口是主对话里的选区浮条（`uiConversation.interactions` + `conversation.chat.text-interaction`，右键也走同一浮条），设置页同样没有「选中了哪段文本」这个上下文。不要据此再往别处加入口。
 - **只用主题 token**：颜色、边框、圆角用 `--dsw-alias-*`，字面颜色只用于图标。
 
 ## 实现规则
@@ -88,6 +90,7 @@ node test/host.test.mjs
 - 通知开关沿用 `localStorage` 键 `dsh.turn-notify.enabled`，不要改。
 - 工作区菜单开关沿用 `localStorage` 键 `dsh.workspace-repair.enabled`，默认开启；它只控制菜单贡献是否注册，不影响修复能力。
 - 工作区归档开关使用 `localStorage` 键 `dsh.workspace-archive.enabled`，默认开启；它只控制菜单贡献是否注册，不影响归档能力。
+- 辅助对话开关使用 `localStorage` 键 `dsh.sidechat.enabled`，默认开启；它只控制选区浮条里的「在侧边对话中提问」是否出现，不影响已经打开的辅助对话 tab。
 - 与 `dsh-answer-notify` 共存会各监听一次 `api-session/status`，一轮回答弹两条通知；迁移时先卸载旧包。
 - 模块 id 前缀 `dh-` 与路由前缀 `/dh/` 是既有约定，改动会导致已安装 profile 失配，非必要不动。
 - 兼容性报告是只读协议：路由 `/dh/compat/report`，顶层 `status` / `runtimeVersion` / `groups`，每条 issue 的 `code` / `level` 稳定；文案只在 `client.js` 的 `compat.*` 键里。

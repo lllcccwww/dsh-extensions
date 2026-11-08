@@ -6,11 +6,13 @@ import compat from './compat/host.js';
 import instructions from './instructions/host.js';
 import notify from './notify/host.js';
 import sandbox from './sandbox/host.js';
+import sidechat from './sidechat/host.js';
 
 /** Features in activation order. */
 export const features = [
   instructions,
   notify,
   sandbox,
+  sidechat,
   compat,
 ];

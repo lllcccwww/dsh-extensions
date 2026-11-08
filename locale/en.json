@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "DSH extensions",
-    "description": "Global AGENTS.md editing, completion notifications, a Workspace menu (sandbox repair and bulk session archiving), and a plugin compatibility check, mostly under one DSH extensions Settings section."
+    "description": "Global AGENTS.md editing, completion notifications, a Workspace menu (sandbox repair and bulk session archiving), a forked side conversation, and a plugin compatibility check, mostly under one DSH extensions Settings section."
   }
 }
 

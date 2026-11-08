@@ -21,6 +21,8 @@ window.__ModuleLoader__.load({
     const REPAIR_MENU_KEY = 'dsh.workspace-repair.enabled';
     /** Whether the workspace menu carries the bulk archive item. */
     const ARCHIVE_MENU_KEY = 'dsh.workspace-archive.enabled';
+    /** Whether the selection bar offers the side-chat action. */
+    const SIDECHAT_KEY = 'dsh.sidechat.enabled';
     const STATE_URL = '/dh/instructions/state';
     const SAVE_URL = '/dh/instructions/save';
     const FOCUS_URL = '/dh/notify/focus';
@@ -67,6 +69,15 @@ window.__ModuleLoader__.load({
 
       'menu.title': '工作区菜单',
       'menu.desc': '控制工作区右键和「…」菜单里的扩展项',
+
+      'side.title': '辅助对话',
+      'side.ask': '在侧边对话中提问',
+      'side.asking': '正在打开…',
+      'side.quote': '引用文本',
+      'side.failed': '没能打开辅助对话',
+      'side.desc': '在主对话里选中文字后，浮条会出现「在侧边对话中提问」',
+      'side.pending': '正在初始化',
+      'side.disabled': '不可用：{reason}',
 
       'sandbox.title': '修复沙箱权限',
       'sandbox.desc': '打开管理员窗口，修复当前工作区的权限',
@@ -191,6 +202,15 @@ window.__ModuleLoader__.load({
 
       'menu.title': 'Workspace menu',
       'menu.desc': 'Controls the extension items in the Workspace right-click and “…” menus',
+
+      'side.title': 'Side chat',
+      'side.ask': 'Ask in side chat',
+      'side.asking': 'Opening…',
+      'side.quote': 'Quote',
+      'side.failed': 'Could not open the side chat',
+      'side.desc': 'Select text in the main conversation to get “Ask in side chat” in the selection bar',
+      'side.pending': 'Initializing',
+      'side.disabled': 'Unavailable: {reason}',
 
       'sandbox.title': 'Repair sandbox access',
       'sandbox.desc': 'Open the elevated window to repair this Workspace’s access',
@@ -409,6 +429,7 @@ window.__ModuleLoader__.load({
     const notificationPreference = createStoredFlag(NOTIFY_KEY, true);
     const repairMenuPreference = createStoredFlag(REPAIR_MENU_KEY, true);
     const archiveMenuPreference = createStoredFlag(ARCHIVE_MENU_KEY, true);
+    const sideChatPreference = createStoredFlag(SIDECHAT_KEY, true);
     //#endregion
 
     //#region notification runtime
@@ -1337,8 +1358,471 @@ window.__ModuleLoader__.load({
           h(NotifyPanel, { t })),
         h(PanelBoundary, { t, key: 'workspace-menu' },
           h(WorkspaceMenuPanel, { t })),
+        h(PanelBoundary, { t, key: 'sidechat' },
+          h(SideChatPanel, { t })),
         h(PanelBoundary, { t, key: 'compat' },
           h(CompatPanel, { t })));
+    }
+    //#endregion
+
+    //#region side chat
+    /** Address, tab type, and gesture identity for the forked side conversation. */
+    const SIDECHAT = {
+      tabId: 'dh-extensions.sidechat',
+      kind: 'dh-sidechat',
+      protocol: 'dh-sidechat',
+      interaction: 'dh-extensions.sidechat.ask',
+      forkUrl: '/dh/sidechat/fork',
+      bodySlot: 'dh-extensions.sidechat.conversation',
+    };
+
+    /** Client services the surface needs; it waits for all of them. */
+    const SIDECHAT_SERVICES = ['resources', 'sidebarRight', 'sidebarRightTabs', 'uiConversation', 'conversation'];
+
+    /** Readiness shown by the Settings row when the surface cannot mount. */
+    const sideChatState = { status: 'pending', reason: '' };
+
+    /** Global styles; the Settings sheet's own styles are scoped to that panel. */
+    const SIDECHAT_CSS = `
+.dx-sidechat-panel{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
+.dx-sidechat-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.dx-sidechat-panel [class$="_older"]{display:none!important}
+.dx-sidechat-panel [data-slot="conversation.composer.dock"]{display:none!important}
+.dx-sidechat-actions{display:flex;align-items:center;gap:2px}
+.dx-sidechat-action{display:inline-flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:calc(var(--dsw-radius-lg,10px) - 3px);background:transparent;color:var(--dsw-alias-label-primary,#eee);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.dx-sidechat-action:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}
+.dx-sidechat-action:disabled{color:var(--dsw-alias-label-tertiary,#adb2b8);cursor:default}
+.dx-sidechat-divider{width:1px;height:16px;flex:none;background:var(--dsw-alias-border-l3,rgba(255,255,255,.16))}
+.dx-sidechat-ask-error{font-size:11px;color:var(--dsw-alias-state-error-primary,var(--dsw-alias-label-primary));max-width:240px}
+`;
+
+    /** Encode one side-chat tab address. */
+    function sideChatAddress({ childId, parentId, hideThroughSeq }) {
+      const query = new URLSearchParams({ parent: String(parentId) });
+      if (typeof hideThroughSeq === 'number') query.set('hide', String(hideThroughSeq));
+      return `dsh-resource://${SIDECHAT.protocol}/session/${encodeURIComponent(childId)}?${query.toString()}`;
+    }
+
+    /** Decode one side-chat tab address; undefined when it is not ours. */
+    function parseSideChatAddress(value) {
+      let url;
+      try {
+        url = new URL(value);
+      } catch {
+        return undefined;
+      }
+      if (url.protocol !== 'dsh-resource:' || url.hostname.toLowerCase() !== SIDECHAT.protocol) return undefined;
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (parts.length !== 2 || parts[0] !== 'session') return undefined;
+      let childId;
+      try {
+        childId = decodeURIComponent(parts[1]);
+      } catch {
+        return undefined;
+      }
+      if (childId === '') return undefined;
+      const hide = Number(url.searchParams.get('hide'));
+      return { childId, hideThroughSeq: Number.isSafeInteger(hide) ? hide : undefined };
+    }
+
+    /**
+     * Hide the inherited fork prefix on one session binding. The binding object
+     * is mutable and the renderer checks identity only, so swapping its event
+     * source scopes the cut to the tab; release restores the original source.
+     */
+    function acquireTranscriptFilter(binding, hideThroughSeq) {
+      if (!Number.isSafeInteger(hideThroughSeq) || binding?.eventSource === undefined) return () => {};
+      const source = binding.eventSource;
+      const seqOf = (entry) => entry?.event?.seq ?? entry?.seq ?? -1;
+      const keep = (entries) => entries.filter((entry) => seqOf(entry) > hideThroughSeq);
+      const filtered = new Proxy(source, {
+        get(target, key) {
+          if (key === 'getSnapshot') {
+            return () => {
+              const snapshot = target.getSnapshot();
+              const change = snapshot.change;
+              return {
+                ...snapshot,
+                entries: keep(snapshot.entries ?? []),
+                hasMore: false,
+                change: change === undefined || change === null || !Array.isArray(change.entries)
+                  ? change
+                  : { ...change, entries: keep(change.entries) },
+              };
+            };
+          }
+          if (key === 'subscribe') return (listener) => target.subscribe(listener);
+          const member = Reflect.get(target, key, target);
+          return typeof member === 'function' ? member.bind(target) : member;
+        },
+      });
+      binding.eventSource = filtered;
+      return () => {
+        if (binding.eventSource === filtered) binding.eventSource = source;
+      };
+    }
+
+    /** Resolve after an abort signal fires. */
+    function waitForAbort(signal) {
+      if (signal === undefined || signal.aborted) return Promise.resolve();
+      return new Promise((resolve) => signal.addEventListener('abort', resolve, { once: true }));
+    }
+
+    /**
+     * Mount the side-chat surface: the right-sidebar tab, its fork resource, the
+     * right-click action, and the draft quote. Every entry is disposable with
+     * the client fiber.
+     * @param ctx - client root context (the inject list guarantees services).
+     * @param t - locale-bound translate for this bundle.
+     */
+    function installSideChat(ctx, t) {
+      const { useState } = React;
+      const resources = ctx.get('resources');
+      const tabs = ctx.get('sidebarRightTabs');
+      const sidebarRight = ctx.get('sidebarRight');
+      const uiConversation = ctx.get('uiConversation');
+      const conversation = ctx.get('conversation');
+      const sessions = ctx.sessions;
+      const missing = [];
+      if (!resources) missing.push('resources');
+      if (!tabs) missing.push('sidebarRightTabs');
+      if (!sidebarRight) missing.push('sidebarRight');
+      if (!uiConversation) missing.push('uiConversation');
+      if (!conversation) missing.push('conversation');
+      if (!sessions) missing.push('sessions');
+      if (missing.length > 0) {
+        sideChatState.status = 'disabled';
+        sideChatState.reason = missing.join(', ');
+        console.warn('[dh-extensions] side chat is unavailable:', missing.join(', '));
+        return;
+      }
+
+      /** childId -> retained reference published by the tab's resource. */
+      const references = new Map();
+      /** One in-flight fork per source session. */
+      const pending = new Map();
+
+      /**
+       * Fork one session through the host route; concurrent asks join the first.
+       * @param sessionId - main conversation identity.
+       * @returns `{ childId, hideThroughSeq }`.
+       */
+      function forkFor(sessionId) {
+        const existing = pending.get(sessionId);
+        if (existing !== undefined) return existing;
+        const run = (async () => {
+          const summary = sessions.list?.getSnapshot?.()?.byId?.[sessionId];
+          const base = t('side.title');
+          const title = typeof summary?.displayTitle === 'string' && summary.displayTitle !== ''
+            ? `${base} · ${summary.displayTitle}`
+            : base;
+          const response = await fetch(SIDECHAT.forkUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ sessionId, title }),
+          });
+          const body = await response.json().catch(() => undefined);
+          if (!response.ok) throw new Error(body?.message ?? `HTTP ${response.status}`);
+          return body;
+        })().finally(() => pending.delete(sessionId));
+        pending.set(sessionId, run);
+        return run;
+      }
+
+      /**
+       * Open (or reveal) the child's tab in the main session's own right dock.
+       * @param sessionId - main conversation identity.
+       * @param result - fork result from {@link forkFor}.
+       */
+      function openFor(sessionId, result) {
+        const address = sideChatAddress({
+          childId: result.childId,
+          parentId: sessionId,
+          hideThroughSeq: typeof result.hideThroughSeq === 'number' ? result.hideThroughSeq : undefined,
+        });
+        if (typeof sidebarRight.openResourceIn === 'function') {
+          sidebarRight.openResourceIn(sessionId, address, { kind: SIDECHAT.kind });
+          return;
+        }
+        sidebarRight.openResource(address, { kind: SIDECHAT.kind });
+      }
+
+      /**
+       * Wait for the tab's resource to publish the child binding.
+       * @param childId - forked session identity.
+       * @returns the retained reference, or undefined after the timeout.
+       */
+      async function waitForReference(childId) {
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+          const reference = references.get(childId);
+          if (reference !== undefined && reference.binding !== undefined) return reference;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        return undefined;
+      }
+
+      /**
+       * Resolve the child's input shell — the same shell its composer binds.
+       * @param sessionId - child session identity.
+       * @returns the shell, or undefined while it is not addressable.
+       */
+      function shellForChild(sessionId) {
+        const reference = references.get(sessionId);
+        try {
+          if (reference?.binding !== undefined) return conversation.input.shellFor(reference.binding);
+        } catch {
+          // Fall through to the canonical binding.
+        }
+        try {
+          return conversation.input.shell(sessionId);
+        } catch {
+          return undefined;
+        }
+      }
+
+      /**
+       * Insert one selection into the child's composer as the shared quote
+       * chip (the same action the main composer's quote button uses).
+       * @param sessionId - child session identity.
+       * @param text - selected text.
+       * @returns whether the editor accepted the quote.
+       */
+      function insertQuote(sessionId, text) {
+        if (typeof text !== 'string' || text.trim() === '') return false;
+        const shell = shellForChild(sessionId);
+        if (shell?.snapshot === undefined || typeof shell.actions?.insertQuote !== 'function') return false;
+        try {
+          if (!shell.actions.insertQuote(text)) return false;
+        } catch (error) {
+          console.warn('[dh-extensions] side chat quote insertion failed:', error);
+          return false;
+        }
+        try {
+          shell.focus();
+        } catch {
+          // Focus is best effort.
+        }
+        return true;
+      }
+
+      // Tab body: the resource publishes the child binding, and SessionProvider
+      // scopes the embedded conversation to that child.
+      function SideChatTab(props) {
+        const info = props.useTabInfo();
+        const resource = props.useResource(info.tab.contentId);
+        const value = resource?.value;
+        if (value === undefined) return null;
+        return h(props.SessionProvider, { session: value.reference },
+          props.renderSlot(SIDECHAT.bodySlot, {}));
+      }
+
+      // Embedded conversation always renders the Chat view of the child.
+      function FixedChatView(props) {
+        return props.renderSlot('conversation.session', { view: 'chat' });
+      }
+
+      // The tab's inner panel: the stock conversation surface for the child.
+      function SideChatPanel(props) {
+        const session = props.useSession((value) => value);
+        const activeTargets = props.useConversation((value) => value.activeTargets.size);
+        const summaryBlank = props.useSessions((state) => state.byId[props.sessionId]?.blank);
+        const shellPhase = activeTargets > 0 || (!session.blank && !session.awaitingFirstTurn) || session.running
+          ? 'active'
+          : session.promptAttempted
+            ? 'engaging'
+            : 'blank';
+        const settling = shellPhase === 'blank' && session.openState === 'loading' && summaryBlank !== true;
+        const hero = shellPhase === 'blank' && (session.openState === 'open' || summaryBlank === true);
+        return h('div', { className: 'dx-sidechat-panel' },
+          h('div', { className: 'dx-sidechat-body' },
+            props.renderFactorySlot(
+              'conversation.content',
+              { variant: 'embedded', phase: settling ? 'settling' : hero ? 'hero' : 'active', hero },
+              { slots: { views: FixedChatView } },
+            )));
+      }
+
+      // Selection bar: quote into the main draft, or ask in a forked side chat.
+      function SideChatAsk(props) {
+        const t2 = translator(props);
+        const [state, setState] = useState('idle');
+        const [error, setError] = useState(undefined);
+        const onQuote = () => {
+          const text = props.readText();
+          if (typeof text !== 'string' || text.trim() === '') {
+            props.dismiss();
+            return;
+          }
+          const actions = props.inputActions;
+          if (typeof actions?.insertQuote !== 'function') {
+            props.dismiss();
+            return;
+          }
+          if (actions.insertQuote(text)) {
+            props.clearSelection?.();
+            props.dismiss();
+          }
+        };
+        const onAsk = async () => {
+          if (state === 'busy') return;
+          const text = props.readText();
+          if (typeof text !== 'string' || text.trim() === '') return;
+          setState('busy');
+          setError(undefined);
+          try {
+            const result = await forkFor(props.sessionId);
+            openFor(props.sessionId, result);
+            await waitForReference(result.childId);
+            let inserted = false;
+            for (let attempt = 0; attempt < 60 && !inserted; attempt += 1) {
+              inserted = insertQuote(result.childId, text);
+              if (!inserted) await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            if (!inserted) throw new Error(t2('side.failed'));
+            props.dismiss();
+          } catch (cause) {
+            console.error('[dh-extensions] side chat failed:', cause);
+            setError(cause?.message ?? String(cause));
+            setState('failed');
+          }
+        };
+        return h('div', { className: 'dx-sidechat-actions' },
+          h('button', {
+            type: 'button',
+            className: 'dx-sidechat-action',
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: onQuote,
+          }, t2('side.quote')),
+          h('span', { className: 'dx-sidechat-divider', 'aria-hidden': 'true' }),
+          h('button', {
+            type: 'button',
+            className: 'dx-sidechat-action',
+            disabled: state === 'busy',
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: onAsk,
+          }, state === 'busy' ? t2('side.asking') : t2('side.ask')),
+          error === undefined ? null : h('span', { className: 'dx-sidechat-ask-error', role: 'alert' },
+            `${t2('side.failed')}：${error}`));
+      }
+
+      // Resource: retain the child session and hide the inherited prefix.
+      ctx.effect(() => resources.register({
+        protocol: SIDECHAT.protocol,
+        async *open(address, { signal }) {
+          const parsed = parseSideChatAddress(address);
+          if (parsed === undefined) throw new Error(`invalid side-chat address: ${address}`);
+          if (signal.aborted) return undefined;
+          const reference = sessions.retain(parsed.childId, { source: 'dh-sidechat', signal });
+          references.set(parsed.childId, reference);
+          const release = acquireTranscriptFilter(reference.binding, parsed.hideThroughSeq);
+          try {
+            yield { ok: true, value: { reference, address: parsed } };
+            await waitForAbort(signal);
+          } finally {
+            if (references.get(parsed.childId) === reference) references.delete(parsed.childId);
+            release();
+            reference.release();
+          }
+          return undefined;
+        },
+      }), 'dh-extensions: side chat resource');
+
+      ctx.effect(() => tabs.register({
+        id: SIDECHAT.tabId,
+        kind: SIDECHAT.kind,
+        patterns: [`dsh-resource://${SIDECHAT.protocol}/session/**`],
+        priority: 'builtin',
+        keepMounted: true,
+        canOpen: (address) => parseSideChatAddress(address) !== undefined,
+        title: () => t('side.title'),
+      }), 'dh-extensions: side chat tab');
+
+      ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
+        name: 'sidebar.right.pane.tab',
+        key: SIDECHAT.tabId,
+        children: { [SIDECHAT.bodySlot]: { kind: 'single', scope: 'session' } },
+      }, SideChatTab));
+
+      ctx.slots.inject(SIDECHAT.bodySlot, () => ctx.slots.register({
+        name: SIDECHAT.bodySlot,
+        locale: NS,
+      }, SideChatPanel));
+
+      ctx.effect(() => uiConversation.interactions.register({
+        id: SIDECHAT.interaction,
+        onInteraction(request) {
+          if (!sideChatPreference.getSnapshot()) return;
+          if (request.trigger !== 'selection' && request.trigger !== 'contextmenu') return;
+          const text = request.readText();
+          if (typeof text !== 'string' || text.trim() === '') return;
+          request.open();
+          if (request.trigger === 'contextmenu') request.preventDefault();
+        },
+      }), 'dh-extensions: side chat gesture');
+
+      // The quote plugin registers before this bundle and would claim the one
+      // selection surface, hiding this action. Offer ours first so both render
+      // in the same bar; everything else still goes through the registry.
+      ctx.effect(() => {
+        const registry = uiConversation.interactions;
+        const original = registry.dispatch;
+        const wrapper = function dispatchSideChat(sessionId, gesture) {
+          if (sideChatPreference.getSnapshot() && gesture?.trigger === 'selection') {
+            const text = typeof gesture.readText === 'function' ? gesture.readText() : undefined;
+            if (typeof text === 'string' && text.trim() !== '') return SIDECHAT.interaction;
+          }
+          return original.call(this, sessionId, gesture);
+        };
+        registry.dispatch = wrapper;
+        return () => {
+          if (registry.dispatch === wrapper) registry.dispatch = original;
+        };
+      }, 'dh-extensions: side chat selection precedence');
+
+      ctx.slots.inject('conversation.chat.text-interaction', () => ctx.slots.register({
+        name: 'conversation.chat.text-interaction',
+        key: SIDECHAT.interaction,
+        locale: NS,
+      }, SideChatAsk));
+
+      ctx.effect(() => {
+        const style = document.createElement('style');
+        style.dataset.dhExtensionsSidechat = 'true';
+        style.textContent = SIDECHAT_CSS;
+        document.head.append(style);
+        return () => style.remove();
+      }, 'dh-extensions: side chat styles');
+
+      sideChatState.status = 'ready';
+      sideChatState.reason = '';
+    }
+
+    /** Settings row: enable or disable the selection-bar action. */
+    function SideChatPanel(props) {
+      const t = translator(props);
+      const enabled = React.useSyncExternalStore(
+        sideChatPreference.subscribe,
+        sideChatPreference.getSnapshot,
+        sideChatPreference.getSnapshot,
+      );
+      const ready = sideChatState.status === 'ready';
+      const description = ready
+        ? t('side.desc')
+        : t('side.disabled', { reason: sideChatState.reason || t('side.pending') });
+      return h('div', { className: 'dx-setting' },
+        h('div', { className: 'dx-setting-row' },
+          h('div', { className: 'dx-setting-text' },
+            h('div', { className: 'dx-setting-title' }, t('side.title')),
+            h('div', { className: 'dx-setting-desc' }, description)),
+          h('button', {
+            type: 'button',
+            role: 'switch',
+            'aria-checked': enabled ? 'true' : 'false',
+            'aria-label': t('side.title'),
+            className: 'dx-switch',
+            disabled: !ready,
+            onClick: () => sideChatPreference.set(!sideChatPreference.getSnapshot()),
+          }, h('span', { className: 'dx-knob' }))));
     }
     //#endregion
 
@@ -1348,6 +1832,31 @@ window.__ModuleLoader__.load({
         const t = ctx.locale.bind(NS);
 
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dh-extensions: dictionaries');
+        // The side-chat surface needs services other UI plugins publish; wait
+        // for them instead of failing when this bundle's apply runs first.
+        const startSideChat = (scope) => {
+          try {
+            installSideChat(scope, t);
+          } catch (error) {
+            sideChatState.status = 'failed';
+            sideChatState.reason = error?.message ?? String(error);
+            console.error('[dh-extensions] side chat setup failed:', error);
+          }
+        };
+        if (typeof ctx.inject === 'function') {
+          ctx.inject(SIDECHAT_SERVICES, startSideChat);
+        } else {
+          startSideChat(ctx);
+        }
+        ctx.effect(() => {
+          const timer = setTimeout(() => {
+            if (sideChatState.status !== 'pending') return;
+            const missing = SIDECHAT_SERVICES.filter((name) => ctx.get(name) === undefined);
+            sideChatState.status = 'disabled';
+            sideChatState.reason = missing.length > 0 ? missing.join(', ') : t('side.pending');
+          }, 5000);
+          return () => clearTimeout(timer);
+        }, 'dh-extensions: side chat readiness');
         ctx.effect(installActivityTracking, 'dh-extensions: window activity');
         ctx.effect(() => () => {
           for (const tag of [...liveNotifications.keys()]) releaseNotification(tag);

@@ -49,6 +49,7 @@ assert.deepEqual([...routes.keys()].sort(), [
   '/dh/instructions/state',
   '/dh/notify/focus',
   '/dh/sandbox/repair',
+  '/dh/sidechat/fork',
 ]);
 
 /**
@@ -86,6 +87,15 @@ async function call(path, method, body, settleMs = 300) {
 }
 
 const file = join(home, 'AGENTS.md');
+
+// Side chat: the fork route validates its method and body, and reports a
+// missing host service instead of throwing.
+assert.equal((await call('/dh/sidechat/fork', 'GET')).status, 405);
+assert.equal((await call('/dh/sidechat/fork', 'POST', 'not json')).status, 400);
+assert.equal((await call('/dh/sidechat/fork', 'POST', {})).status, 400);
+const sideChatUnavailable = await call('/dh/sidechat/fork', 'POST', { sessionId: 'session-x' });
+assert.equal(sideChatUnavailable.status, 503);
+assert.equal(sideChatUnavailable.json.code, 'unavailable');
 
 // Instructions: missing file, create, digest, conflict, force.
 let state = await call('/dh/instructions/state', 'GET');
