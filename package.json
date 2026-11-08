@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, sandbox repair, and a compatibility self-check",
+  "description": "DSH extensions: one Settings section collecting global AGENTS.md editing, completion notifications, sandbox repair, bulk workspace-session archiving, and a compatibility self-check",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lllcccwww/dsh-extensions.git"

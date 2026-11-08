@@ -19,6 +19,8 @@ window.__ModuleLoader__.load({
     const NOTIFY_KEY = 'dsh.turn-notify.enabled';
     /** Whether the workspace menu carries the sandbox repair item. */
     const REPAIR_MENU_KEY = 'dsh.workspace-repair.enabled';
+    /** Whether the workspace menu carries the bulk archive item. */
+    const ARCHIVE_MENU_KEY = 'dsh.workspace-archive.enabled';
     const STATE_URL = '/dh/instructions/state';
     const SAVE_URL = '/dh/instructions/save';
     const FOCUS_URL = '/dh/notify/focus';
@@ -26,6 +28,8 @@ window.__ModuleLoader__.load({
     const COMPAT_URL = '/dh/compat/report';
     /** Glyph key registered for the workspace repair item. */
     const REPAIR_ICON_KEY = 'dh-extensions.repair';
+    /** Glyph key registered for the bulk archive item. */
+    const ARCHIVE_ICON_KEY = 'dh-extensions.archive-all';
     const NOTICE_TTL_MS = 3200;
 
     const zh = {
@@ -61,11 +65,26 @@ window.__ModuleLoader__.load({
       'notify.test.title': '通知已开启',
       'notify.test.body': '窗口最小化或不在前台时，回答完成后会在这里提醒你。',
 
+      'menu.title': '工作区菜单',
+      'menu.desc': '控制工作区右键和「…」菜单里的扩展项',
+
       'sandbox.title': '修复沙箱权限',
-      'sandbox.desc': '显示在工作区右键和「…」菜单里',
+      'sandbox.desc': '打开管理员窗口，修复当前工作区的权限',
       'sandbox.menu': '修复沙箱权限',
       'sandbox.opened': '已打开管理员窗口，修复正在运行；结果看窗口最后一行',
       'sandbox.failed': '没能打开修复窗口',
+
+      'archive.title': '归档全部会话',
+      'archive.desc': '一次归档当前工作区的所有已有会话',
+      'archive.menu': '归档全部会话',
+      'archive.done': '已归档 {count} 个会话',
+      'archive.partial': '已归档 {count} 个；{failed} 个失败',
+      'archive.failed': '归档失败',
+      'archive.reason': '归档失败：{reason}',
+      'archive.canceled': '已取消归档',
+      'archive.none': '没有可归档的会话',
+      'archive.runningConfirm': '有 {count} 个会话正在运行。继续会停止它们并归档，确定吗？',
+      'archive.unavailable': '当前 DSH 版本不支持批量归档',
 
       'compat.title': '插件兼容性检测',
       'compat.desc': '对照当前 DSH 检查本扩展的版本要求、入口和路由',
@@ -170,11 +189,26 @@ window.__ModuleLoader__.load({
       'notify.test.title': 'Notifications are on',
       'notify.test.body': 'When the window is minimized or in the background, a finished answer is announced here.',
 
+      'menu.title': 'Workspace menu',
+      'menu.desc': 'Controls the extension items in the Workspace right-click and “…” menus',
+
       'sandbox.title': 'Repair sandbox access',
-      'sandbox.desc': 'Show it in the Workspace right-click and “…” menus',
+      'sandbox.desc': 'Open the elevated window to repair this Workspace’s access',
       'sandbox.menu': 'Repair sandbox access',
       'sandbox.opened': 'The elevated window is running the repair; read its last line for the result',
       'sandbox.failed': 'Could not open the repair window',
+
+      'archive.title': 'Archive all sessions',
+      'archive.desc': 'Archive every existing session in this Workspace at once',
+      'archive.menu': 'Archive all sessions',
+      'archive.done': 'Archived {count} session(s)',
+      'archive.partial': 'Archived {count}; {failed} failed',
+      'archive.failed': 'Could not archive the sessions',
+      'archive.reason': 'Could not archive: {reason}',
+      'archive.canceled': 'Archive canceled',
+      'archive.none': 'No sessions to archive',
+      'archive.runningConfirm': '{count} session(s) are running. Continuing stops them and archives them. Continue?',
+      'archive.unavailable': 'This DSH version does not expose archiving',
 
       'compat.title': 'Plugin compatibility',
       'compat.desc': 'Check this extension’s version requirements, entries, and routes against the running DSH',
@@ -374,6 +408,7 @@ window.__ModuleLoader__.load({
 
     const notificationPreference = createStoredFlag(NOTIFY_KEY, true);
     const repairMenuPreference = createStoredFlag(REPAIR_MENU_KEY, true);
+    const archiveMenuPreference = createStoredFlag(ARCHIVE_MENU_KEY, true);
     //#endregion
 
     //#region notification runtime
@@ -598,6 +633,122 @@ window.__ModuleLoader__.load({
       } catch (reason) {
         const message = reason instanceof Error ? reason.message : String(reason);
         ctx.contextMenus.notify(`${t('sandbox.failed')}: ${message}`, false);
+      }
+    }
+    //#endregion
+
+    //#region workspace archive all
+    /**
+     * Archive-box glyph for the bulk archive item. The menu aligns every row on
+     * a 16px slot, and the built-in glyph package is not importable here, so the
+     * icon is drawn with the same 16px geometry.
+     */
+    function ArchiveIcon() {
+      return h('svg', {
+        width: 16,
+        height: 16,
+        viewBox: '0 0 16 16',
+        fill: 'none',
+        'aria-hidden': 'true',
+        focusable: 'false',
+      },
+      h('path', {
+        d: 'M13.5 2.5H2.5C1.94772 2.5 1.5 2.94772 1.5 3.5V4.5C1.5 5.05228 1.94772 5.5 2.5 5.5H13.5C14.0523 5.5 14.5 5.05228 14.5 4.5V3.5C14.5 2.94772 14.0523 2.5 13.5 2.5Z',
+        stroke: 'currentColor',
+        strokeWidth: 1.2,
+      }),
+      h('path', {
+        d: 'M2.5 5.5V13.5C2.5 13.7652 2.60536 14.0196 2.79289 14.2071C2.98043 14.3946 3.23478 14.5 3.5 14.5H12.5C12.7652 14.5 13.0196 14.3946 13.2071 14.2071C13.3946 14.0196 13.5 13.7652 13.5 13.5V5.5',
+        stroke: 'currentColor',
+        strokeWidth: 1.2,
+      }),
+      h('path', {
+        d: 'M6.5 9.5H9.5',
+        stroke: 'currentColor',
+        strokeWidth: 1.2,
+      }));
+    }
+
+    /**
+     * Read one Workspace and its conversations that are still visible. The
+     * Workspace list is already access-filtered; when either list is not ready
+     * the menu item stays hidden instead of offering an action that cannot run.
+     * A blank draft is the list's "new session" affordance, not a conversation,
+     * so it is left in place.
+     * @param ctx - applied Client plugin context.
+     * @param workspaceId - Workspace captured from the menu target.
+     * @returns `{ candidates }`, or undefined when that row cannot be read.
+     */
+    function visibleWorkspaceSessions(ctx, workspaceId) {
+      try {
+        const workspaces = ctx.get('workspaces')?.list?.getSnapshot?.();
+        const sessions = ctx.sessions?.list?.getSnapshot?.();
+        if (workspaces?.phase !== 'ready' || sessions?.phase !== 'ready') return undefined;
+        if (!Array.isArray(workspaces.items)) return undefined;
+        const workspace = workspaces.items.find((item) => item.workspaceId === workspaceId);
+        if (workspace === undefined) return undefined;
+        const archived = new Set(workspaces.archivedSessionIds ?? []);
+        const candidates = (workspace.sessionIds ?? []).filter((id) => (
+          typeof id === 'string'
+          && !archived.has(id)
+          && sessions.byId?.[id]?.blank !== true
+        ));
+        return { candidates };
+      } catch {
+        return undefined;
+      }
+    }
+
+    /**
+     * Archive every visible Session of one Workspace. Running Sessions are
+     * stopped only after the operator confirms; the candidate set is read again
+     * at run time so a menu opened against older state cannot archive stale ids.
+     * @param workspaceId - Workspace captured from the menu target.
+     * @param t - translator bound to this bundle's namespace.
+     * @param ctx - applied Client plugin context.
+     */
+    async function archiveWorkspaceSessions(workspaceId, t, ctx) {
+      const notify = (text, success) => ctx.contextMenus?.notify?.(text, success);
+      const controller = ctx.get('workspaces');
+      if (typeof controller?.archiveSession !== 'function') {
+        notify(t('archive.unavailable'), false);
+        return;
+      }
+      const found = visibleWorkspaceSessions(ctx, workspaceId);
+      if (found === undefined || found.candidates.length === 0) {
+        notify(t('archive.none'), false);
+        return;
+      }
+      const sessions = ctx.sessions?.list?.getSnapshot?.();
+      const running = new Set(found.candidates.filter((id) => sessions?.byId?.[id]?.running === true));
+      if (running.size > 0) {
+        const confirmed = typeof window !== 'undefined' && typeof window.confirm === 'function'
+          ? window.confirm(t('archive.runningConfirm', { count: running.size }))
+          : false;
+        if (!confirmed) {
+          notify(t('archive.canceled'), false);
+          return;
+        }
+      }
+      let archived = 0;
+      let failed = 0;
+      let firstError = '';
+      for (const sessionId of found.candidates) {
+        try {
+          await controller.archiveSession(sessionId, { stopActivity: running.has(sessionId) });
+          archived += 1;
+        } catch (reason) {
+          failed += 1;
+          if (firstError === '') firstError = reason instanceof Error ? reason.message : String(reason);
+          console.error('[dh-extensions] archive failed:', sessionId, reason);
+        }
+      }
+      if (failed === 0) {
+        notify(t('archive.done', { count: archived }), true);
+      } else if (archived === 0) {
+        notify(t('archive.reason', { reason: firstError }), false);
+      } else {
+        notify(t('archive.partial', { count: archived, failed }), false);
       }
     }
     //#endregion
@@ -872,28 +1023,51 @@ window.__ModuleLoader__.load({
 
     //#endregion
 
-    //#region sandbox menu panel
-    /** Settings switch for the workspace repair item; only the registration follows it. */
-    function SandboxMenuPanel(props) {
+    //#region workspace menu panel
+    /** Switches for the two workspace-menu items; each registration follows its switch. */
+    function WorkspaceMenuPanel(props) {
       const t = translator(props);
-      const enabled = React.useSyncExternalStore(
+      const repairEnabled = React.useSyncExternalStore(
         repairMenuPreference.subscribe,
         repairMenuPreference.getSnapshot,
         repairMenuPreference.getSnapshot,
       );
-      if (!onWindows) return null;
-      return h('div', { className: 'dx-setting dx-setting-row' },
-        h('div', { className: 'dx-setting-text' },
-          h('div', { className: 'dx-setting-title' }, t('sandbox.title')),
-          h('div', { className: 'dx-setting-desc' }, t('sandbox.desc'))),
+      const archiveEnabled = React.useSyncExternalStore(
+        archiveMenuPreference.subscribe,
+        archiveMenuPreference.getSnapshot,
+        archiveMenuPreference.getSnapshot,
+      );
+      const repairRow = onWindows
+        ? h('div', { className: 'dx-sub-row' },
+          h('div', { className: 'dx-sub-text' },
+            h('div', { className: 'dx-sub-title' }, t('sandbox.title')),
+            h('div', { className: 'dx-sub-desc' }, t('sandbox.desc'))),
+          h('button', {
+            type: 'button',
+            role: 'switch',
+            'aria-checked': repairEnabled ? 'true' : 'false',
+            'aria-label': t('sandbox.title'),
+            className: 'dx-switch',
+            onClick: () => repairMenuPreference.set(!repairMenuPreference.getSnapshot()),
+          }, h('span', { className: 'dx-knob' })))
+        : null;
+      const archiveRow = h('div', { className: 'dx-sub-row' },
+        h('div', { className: 'dx-sub-text' },
+          h('div', { className: 'dx-sub-title' }, t('archive.title')),
+          h('div', { className: 'dx-sub-desc' }, t('archive.desc'))),
         h('button', {
           type: 'button',
           role: 'switch',
-          'aria-checked': enabled ? 'true' : 'false',
-          'aria-label': t('sandbox.title'),
+          'aria-checked': archiveEnabled ? 'true' : 'false',
+          'aria-label': t('archive.title'),
           className: 'dx-switch',
-          onClick: () => repairMenuPreference.set(!repairMenuPreference.getSnapshot()),
+          onClick: () => archiveMenuPreference.set(!archiveMenuPreference.getSnapshot()),
         }, h('span', { className: 'dx-knob' })));
+      return h('div', { className: 'dx-setting' },
+        settingHead(t, 'menu.title', 'menu.desc'),
+        h('div', { className: 'dx-sub-list' },
+          ...(repairRow === null ? [] : [repairRow]),
+          archiveRow));
     }
     //#endregion
 
@@ -1161,8 +1335,8 @@ window.__ModuleLoader__.load({
           h(InstructionsPanel, { t })),
         h(PanelBoundary, { t, key: 'notify' },
           h(NotifyPanel, { t })),
-        h(PanelBoundary, { t, key: 'sandbox-menu' },
-          h(SandboxMenuPanel, { t })),
+        h(PanelBoundary, { t, key: 'workspace-menu' },
+          h(WorkspaceMenuPanel, { t })),
         h(PanelBoundary, { t, key: 'compat' },
           h(CompatPanel, { t })));
     }
@@ -1227,6 +1401,47 @@ window.__ModuleLoader__.load({
           }, 'dh-extensions: workspace sandbox repair');
         } else if (onWindows) {
           console.warn('[dh-extensions] contextMenus is unavailable; the workspace repair item is hidden');
+        }
+
+        // Bulk archiving also needs the Workspace identity, which only this
+        // menu carries. The item is hidden while the Workspace has no visible
+        // Sessions, so an empty menu never offers a no-op action.
+        if (ctx.contextMenus !== undefined) {
+          ctx.slots.inject('contextMenu.icon', () => ctx.slots.register({
+            name: 'contextMenu.icon',
+            key: ARCHIVE_ICON_KEY,
+          }, ArchiveIcon));
+          ctx.effect(() => {
+            let dispose = () => {};
+            const sync = () => {
+              dispose();
+              dispose = () => {};
+              if (!archiveMenuPreference.getSnapshot()) return;
+              dispose = ctx.contextMenus.register({
+                id: 'dh-extensions.archive-all',
+                target: 'workspace',
+                order: 260,
+                resolve: ({ workspaceId }) => {
+                  if (typeof workspaceId !== 'string' || workspaceId === '') return [];
+                  const found = visibleWorkspaceSessions(ctx, workspaceId);
+                  if (found === undefined || found.candidates.length === 0) return [];
+                  return [{
+                    id: 'archive-all',
+                    icon: { key: ARCHIVE_ICON_KEY },
+                    label: t('archive.menu'),
+                    failureLabel: t('archive.failed'),
+                    run: () => archiveWorkspaceSessions(workspaceId, t, ctx),
+                  }];
+                },
+              });
+            };
+            const stop = archiveMenuPreference.subscribe(sync);
+            sync();
+            return () => {
+              stop();
+              dispose();
+            };
+          }, 'dh-extensions: workspace archive all');
         }
 
         const list = ctx.sessions?.list;
